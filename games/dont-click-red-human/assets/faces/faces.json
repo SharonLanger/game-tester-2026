@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "Only individually approved faces for Don't Click Red — Human. Pending players have no assets here yet.",
+  "participants": [
+    {
+      "id": "itzik",
+      "name_he": "איציק",
+      "image": "itzik.webp"
+    },
+    {
+      "id": "shiran",
+      "name_he": "שירן",
+      "image": "shiran.webp"
+    },
+    {
+      "id": "bat-hen",
+      "name_he": "בת־חן",
+      "image": "bat-hen.webp"
+    },
+    {
+      "id": "eliran",
+      "name_he": "אלירן",
+      "image": "eliran.webp"
+    }
+  ]
+}
