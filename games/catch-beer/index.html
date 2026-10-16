@@ -1,0 +1,65 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0d1425"><meta name="game-title" content="תפוס את הבירה"><meta name="game-icon" content="🍺"><meta name="description" content="אספו בקבוקים וקוקטיילים והתחמקו מפצצות. הכול נעשה מהיר יותר!"><title>תפוס את הבירה</title><style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f7f8ff;background:#0d1425; color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overscroll-behavior:none}
+body{background:radial-gradient(circle at 50% 0,#243b60,#0d1425 68%);padding:12px;display:flex;justify-content:center}
+main{width:min(100%,720px);margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+h1{font-size:clamp(22px,5vw,34px);margin:0}.version{font-size:12px;background:#243655;color:#c3daff;border:1px solid #51658c;border-radius:99px;padding:6px 9px;white-space:nowrap}
+.note{font-size:13px;color:#bfcee9;margin:4px 0 0}
+.stats{display:flex;gap:8px;margin-bottom:12px}.stat{flex:1;border:1px solid #445777;background:#1b2a45;border-radius:14px;text-align:center;padding:10px 5px}
+.stat b{font-size:clamp(19px,5vw,29px);display:block;font-variant-numeric:tabular-nums}.stat small{color:#a9bbdb;font-size:12px}
+.stage{position:relative;overflow:hidden;border:2px solid #526c95;border-radius:19px;background:#18273f}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.overlay{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:#101a32cf;padding:15px;backdrop-filter:blur(4px)}
+.overlay[hidden]{display:none}.modal{text-align:center;max-width:430px;width:100%;padding:20px 16px;border:1px solid #58729b;background:#172642f0;border-radius:20px}
+.modal .emoji{font-size:50px}.modal h2{font-size:clamp(22px,5vw,32px);margin:6px 0}.modal p{font-size:15px;line-height:1.6;color:#d1dff5;margin:8px 0 18px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:3px solid #b6d6ff}
+.primary{border:0;background:#a9edab;color:#15331e;border-radius:12px;padding:13px 22px;font-weight:800;min-height:48px}
+.controls{display:flex;gap:12px;margin-top:12px}.controls button{flex:1;min-height:60px;border-radius:15px;background:#344c70;color:white;font-size:19px;font-weight:800;border:1px solid #7191bc;touch-action:none}
+.foot{color:#b4c3db;text-align:center;font-size:12px;line-height:1.6}
+@media(max-width:600px){.stage .overlay{position:fixed;inset:0;overflow-y:auto}.modal{margin:auto}body{padding:9px}.controls{gap:8px}.controls button{min-height:54px}}
+</style></head><body><main>
+<header><h1>🍺 תפוס את הבירה</h1><span class="version">גרסת בדיקה 1.0</span></header>
+<div class="stats"><div class="stat"><b id="score">0</b><small>נקודות</small></div><div class="stat"><b id="lives">❤️❤️❤️</b><small>חיים</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
+<div class="stage"><canvas id="game" width="400" height="540"></canvas><div class="overlay" id="overlay"><div class="modal"><div class="emoji" id="icon">🍻</div><h2 id="headline">לתפוס או לברוח?</h2><p id="explain">תפסו בירות וקוקטיילים. היזהרו מהפצצות! ככל שתשרדו יותר, החפצים ייפלו מהר יותר.</p><button id="start" class="primary">התחל משחק</button></div></div></div>
+<div class="controls"><button id="left" aria-label="שמאלה">◀ שמאלה</button><button id="right" aria-label="ימינה">ימינה ▶</button></div><p class="foot">גררו את האצבע על המסך, לחצו ימינה ושמאלה או השתמשו בחצים במקלדת.</p></main><script>
+(()=>{'use strict';
+const c=document.querySelector('#game'),g=c.getContext('2d'),W=400,H=540;
+const E=id=>document.getElementById(id),ui={score:E('score'),lives:E('lives'),best:E('best'),overlay:E('overlay'),icon:E('icon'),headline:E('headline'),explain:E('explain')};
+const KEY='tester-catch-beer-best-v1';let best=0;try{best=Number(localStorage.getItem(KEY))||0}catch(e){}
+ui.best.textContent=best;let mode='menu',score=0,lives=3,elapsed=0,spawn=0,player=200,things=[],keys={left:false,right:false},last=0;
+const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function modal(emoji,title,desc,button){ui.icon.textContent=emoji;ui.headline.textContent=title;ui.explain.textContent=desc;E('start').textContent=button;ui.overlay.hidden=false}
+function reset(){mode='play';score=0;lives=3;elapsed=0;spawn=.3;player=200;things=[];ui.overlay.hidden=true;sync()}
+function sync(){ui.score.textContent=score;ui.lives.textContent='❤️'.repeat(lives)+'🖤'.repeat(3-lives)}
+function finish(){mode='over';if(score>best){best=score;ui.best.textContent=best;try{localStorage.setItem(KEY,String(best))}catch(e){}}modal('💥','נגמרו החיים!','צברת '+score+' נקודות. עוד סיבוב לשבור את השיא?','שחק שוב')}
+function make(){const bomb=Math.random()<Math.min(.31,.15+elapsed*.0025);const kind=bomb?'bomb':Math.random()<.55?'beer':'cocktail';things.push({x:rand(25,375),y:-30,type:kind,vy:rand(145,210)+elapsed*5,r:kind==='bomb'?21:22});}
+function update(dt){
+ elapsed+=dt;const velocity=280;
+ if(keys.left)player-=velocity*dt;if(keys.right)player+=velocity*dt;player=clamp(player,37,W-37);
+ spawn-=dt;if(spawn<=0){make();spawn=Math.max(.24,.72-elapsed*.006)*rand(.74,1.18)}
+ for(const o of things){o.y+=o.vy*dt;
+ if(o.y>H-64&&o.y<H-21&&Math.abs(o.x-player)<48){o.got=true;if(o.type==='bomb'){lives--;sync();if(lives<=0){finish();break}}else{score+=o.type==='beer'?10:15;sync()}}
+ if(o.y>H+50)o.got=true}
+ things=things.filter(o=>!o.got);
+}
+function draw(){
+ const grad=g.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#9edff0');grad.addColorStop(1,'#e4f2d7');g.fillStyle=grad;g.fillRect(0,0,W,H);
+ g.fillStyle='#b2c9be';for(let i=0;i<7;i++){const x=i*79;g.fillRect(x,90,12,360);g.fillRect(x-6,105,24,7)}
+ g.fillStyle='#526678';g.fillRect(0,H-30,W,30);g.fillStyle='#a6c79a';g.fillRect(0,H-44,W,14);
+ g.font='33px system-ui';g.textAlign='center';g.textBaseline='middle';
+ for(const o of things){g.fillText(o.type==='bomb'?'💣':o.type==='beer'?'🍺':'🍹',o.x,o.y)}
+ g.fillStyle='#855a39';g.beginPath();g.moveTo(player-48,H-73);g.lineTo(player+48,H-73);g.lineTo(player+31,H-27);g.lineTo(player-31,H-27);g.closePath();g.fill();
+ g.fillStyle='#d5a26b';g.fillRect(player-44,H-78,88,10);g.font='25px system-ui';g.fillText('🧺',player,H-52);
+ g.fillStyle='#263e60';g.font='bold 16px system-ui';g.textAlign='start';g.fillText('מהירות ×'+(1+elapsed*.025).toFixed(1),16,23);
+}
+function tick(t){const dt=Math.min(.04,(t-last)/1000||0);last=t;if(mode==='play')update(dt);draw();requestAnimationFrame(tick)}
+const hold=(id,key)=>{const el=E(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[key]=true;el.setPointerCapture?.(e.pointerId)});for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,()=>keys[key]=false)};
+hold('left','left');hold('right','right');
+function pointer(e){if(mode!=='play')return;const box=c.getBoundingClientRect();player=clamp((e.clientX-box.left)*W/box.width,37,W-37)}
+c.addEventListener('pointerdown',pointer);c.addEventListener('pointermove',e=>{if(e.buttons)pointer(e)});
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft')keys.left=true;if(e.code==='ArrowRight')keys.right=true;if(e.code==='Space'&&mode!=='play')reset()});
+addEventListener('keyup',e=>{if(e.code==='ArrowLeft')keys.left=false;if(e.code==='ArrowRight')keys.right=false});
+E('start').onclick=reset;requestAnimationFrame(tick);
+})();
+</script></body></html>
