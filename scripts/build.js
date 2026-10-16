@@ -36,8 +36,14 @@ function meta(source, key) {
   return '';
 }
 const paths = findGameFiles(gamesDir).sort((a,b) => a.localeCompare(b));
+// Games tagged with <meta name="game-hidden" content="true"> are published
+// for direct URL access but omitted from the tester homepage and game menu.
+const visiblePaths = paths.filter(file => {
+  const src = fs.readFileSync(path.join(gamesDir,file), 'utf8');
+  return meta(src, 'game-hidden').trim().toLowerCase() !== 'true';
+});
 const used = new Set();
-const games = paths.map(file => {
+const games = visiblePaths.map(file => {
   const src = fs.readFileSync(path.join(gamesDir,file), 'utf8');
   const id = file.replace(/\/index\.html$/i,'').replace(/\.html?$/i,'').replace(/[^\w\-\/]/g,'-').replace(/\//g,'--');
   if (used.has(id)) throw new Error('Duplicate game ID: ' + id);
