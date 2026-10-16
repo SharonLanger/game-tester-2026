@@ -4,7 +4,9 @@ This repository is ONLY for testing games before they move elsewhere. The site a
 
 ## Public tester URL
 
-https://sharonlanger.github.io/game-tester-2026/
+https://sharonlanger.github.io/game-tester-2026/human/
+
+All published pages and shared assets live under `/human/`. Old root-level game URLs are intentionally not published or redirected.
 
 ## Initial GitHub Pages setup (one time)
 
@@ -54,6 +56,6 @@ The website loads each game under `play.html` and displays a fixed **חזרה ל
 npm run build
 ```
 
-Open `dist/index.html` in a browser. No external packages are needed.
+Open `dist/human/index.html` in a browser. No external packages are needed.
 
 The included first and second games are placeholders only. There are no accounts, databases, or scoreboards.
