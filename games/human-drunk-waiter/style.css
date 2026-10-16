@@ -1,0 +1,24 @@
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f6f7ff;background:#101726;color-scheme:dark}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;overscroll-behavior:none}
+    body{background:radial-gradient(circle at 50% 0,#384e69,#101726 65%);padding:10px;display:flex;justify-content:center}
+    main{width:min(100%,670px);margin:auto}
+    header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+    h1{margin:0;font-size:clamp(22px,5vw,32px)}
+    .tag{font-size:12px;border-radius:99px;background:#2b405c;border:1px solid #6683a5;color:#ccdef3;padding:6px 10px}
+    .stats{display:flex;gap:8px;margin:0 0 10px}
+    .stat{flex:1;border-radius:13px;border:1px solid #4e6580;background:#23314b;text-align:center;padding:9px 3px}
+    .stat b{display:block;font-size:clamp(21px,5vw,29px);font-variant-numeric:tabular-nums}
+    .stat small{font-size:12px;color:#c5d0e0}
+    .stage{position:relative;background:#efdbb8;overflow:hidden;border-radius:17px;border:2px solid #6889a8}
+    canvas{width:100%;height:auto;display:block;touch-action:none}
+    .overlay{position:absolute;inset:0;background:#0c1b2ecf;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:14px}
+    .overlay[hidden]{display:none}
+    .modal{border:1px solid #7595ad;border-radius:20px;padding:20px 15px;background:#263751f0;text-align:center;max-width:440px;width:100%}
+    .emoji{font-size:48px}.modal h2{font-size:clamp(24px,6vw,32px);margin:8px 0}.modal p{line-height:1.6;color:#d2e3f4;font-size:15px}
+    button{font:inherit;cursor:pointer;touch-action:none}
+    .primary{border:0;background:#ffdaa2;border-radius:13px;padding:13px 26px;color:#3f2c18;font-weight:900;font-size:17px;touch-action:manipulation}
+    .controls{display:flex;gap:12px;margin-top:12px}.controls button{flex:1;height:65px;background:#30496b;color:white;border:1px solid #7390b8;border-radius:15px;font-size:19px;font-weight:800}.controls button:active{background:#506c92}
+    .hint{color:#c1cce0;font-size:13px;line-height:1.65;text-align:center;margin:10px 0 0}
+    @media(max-width:600px){.overlay{position:fixed;inset:0;z-index:5;overflow-y:auto}.modal{margin:auto}.controls{gap:7px}.controls button{height:55px}}
+
