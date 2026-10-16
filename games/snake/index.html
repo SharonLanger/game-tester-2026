@@ -1,0 +1,65 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0e1a28"><meta name="game-title" content="נחש הבקבוקים"><meta name="game-icon" content="🐍"><meta name="description" content="נחש קלאסי שאוסף בקבוקים, גדל, מאיץ ומתחמק ממכשולים."><title>נחש הבקבוקים</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f5f8ff;background:#0b1928;color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;min-height:100%;overscroll-behavior:none}
+body{background:radial-gradient(circle at 50% 0,#284b4c,#0b1928 65%);padding:10px;display:flex;justify-content:center}
+main{width:min(100%,530px);margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}h1{font-size:clamp(22px,5vw,32px);margin:0}.tag{border-radius:99px;background:#225347;color:#ccf7d3;padding:6px 11px;font-size:12px}
+.stats{display:flex;gap:8px;margin:0 0 10px}.stat{flex:1;text-align:center;background:#19333b;border:1px solid #456c71;border-radius:12px;padding:9px 4px}.stat b{display:block;font-size:25px;font-variant-numeric:tabular-nums}.stat small{font-size:12px;color:#b5cec8}
+.stage{border:2px solid #57847a;border-radius:15px;position:relative;overflow:hidden;background:#152e33}canvas{display:block;width:100%;height:auto;touch-action:none}
+.overlay{position:absolute;inset:0;background:#0b1a28d9;display:flex;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}.overlay[hidden]{display:none}
+.modal{text-align:center;border-radius:16px;background:#18323fe8;border:1px solid #618c8c;max-width:390px;width:100%;padding:22px 14px}.emoji{font-size:45px}.modal h2{font-size:clamp(23px,5vw,31px);margin:5px 0}.modal p{line-height:1.6;font-size:15px;color:#d0e6e9}
+button{font:inherit;cursor:pointer;touch-action:manipulation}.primary{border:0;background:#a9eeb2;color:#183724;padding:13px 25px;font-weight:900;border-radius:12px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:330px;margin:14px auto}
+.pad button{height:55px;border:1px solid #769fa0;background:#264e5b;color:white;border-radius:12px;font-size:23px;touch-action:none}
+.pad button:active{background:#437a7a}.pad .up{grid-column:2}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+.hint{text-align:center;color:#bed1d8;font-size:12px;line-height:1.55;margin:0}
+@media(max-width:600px){.overlay{position:fixed;inset:0;z-index:3;overflow-y:auto}.modal{margin:auto}.pad button{height:47px}}
+</style></head><body><main>
+<header><h1>🐍 נחש הבקבוקים</h1><span class="tag">גרסת בדיקה 1.0</span></header>
+<div class="stats"><div class="stat"><b id="score">0</b><small>נקודות</small></div><div class="stat"><b id="level">1</b><small>מהירות</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
+<div class="stage"><canvas id="canvas" width="440" height="440"></canvas><div id="overlay" class="overlay"><div class="modal"><div class="emoji" id="icon">🐍</div><h2 id="title">כמה תוכל לגדול?</h2><p id="desc">אספו את הבקבוקים הירוקים, בלי להיתקע בקיר או בעצמכם. בהמשך יופיעו מכשולים והנחש ינוע מהר יותר.</p><button id="start" class="primary">התחל משחק</button></div></div></div>
+<div class="pad"><button class="up" id="up" aria-label="למעלה">▲</button><button class="left" id="left" aria-label="שמאלה">◀</button><button class="down" id="down" aria-label="למטה">▼</button><button class="right" id="right" aria-label="ימינה">▶</button></div>
+<p class="hint">השתמשו בחצים, בכפתורים או בהחלקת אצבע על לוח המשחק.</p>
+</main><script>
+(()=>{'use strict';
+const c=document.getElementById('canvas'),ctx=c.getContext('2d'),E=id=>document.getElementById(id),N=20,S=22;
+const ui={score:E('score'),level:E('level'),best:E('best'),overlay:E('overlay'),icon:E('icon'),title:E('title'),desc:E('desc')};
+const KEY='tester-snake-best-v1';let best=0;try{best=Number(localStorage.getItem(KEY))||0}catch(e){}ui.best.textContent=best;
+let mode='ready',snake=[],food=null,blocks=[],direction={x:1,y:0},queued={x:1,y:0},score=0,ticks=0,accum=0,last=0,turnLocked=false,swipe=null;
+const eq=(a,b)=>a.x===b.x&&a.y===b.y;
+function show(icon,title,desc,label){ui.icon.textContent=icon;ui.title.textContent=title;ui.desc.textContent=desc;E('start').textContent=label;ui.overlay.hidden=false}
+function emptySpot(excludeHead=false){let spaces=[];for(let x=0;x<N;x++)for(let y=0;y<N;y++){const pos={x,y};
+ if(snake.some(a=>eq(a,pos))||blocks.some(a=>eq(a,pos))||food&&eq(food,pos)||excludeHead&&Math.abs(x-snake[0].x)+Math.abs(y-snake[0].y)<6)continue;spaces.push(pos)}
+ return spaces.length?spaces[Math.floor(Math.random()*spaces.length)]:null}
+function begin(){snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];direction={x:1,y:0};queued={x:1,y:0};
+ blocks=[];food=null;score=0;ticks=0;accum=0;turnLocked=false;mode='play';ui.overlay.hidden=true;ui.score.textContent=0;ui.level.textContent=1;food=emptySpot()}
+function finish(){mode='over';if(score>best){best=score;ui.best.textContent=best;try{localStorage.setItem(KEY,String(best))}catch(e){}}
+ show('💥','הנחש התרסק!','אספת '+score/10+' בקבוקים וצברת '+score+' נקודות.','שחק שוב')}
+function turn(x,y){if(mode!=='play')return;if(turnLocked)return;if(x===-direction.x&&y===-direction.y)return;queued={x,y};turnLocked=true}
+function step(){
+ direction=queued;turnLocked=false;const head={x:snake[0].x+direction.x,y:snake[0].y+direction.y};
+ const eating=food&&eq(head,food);const body=eating?snake:snake.slice(0,-1);
+ if(head.x<0||head.x>=N||head.y<0||head.y>=N||body.some(s=>eq(s,head))||blocks.some(s=>eq(s,head))){finish();return}
+ snake.unshift(head);if(!eating)snake.pop();
+ else{score+=10;ui.score.textContent=score;ui.level.textContent=1+Math.floor(score/40);food=null;
+ if(score%40===0){const b=emptySpot(true);if(b)blocks.push(b)}
+ food=emptySpot();if(!food){show('🏆','מילאת את הלוח!','ניצחת עם '+score+' נקודות!','שחק שוב');mode='over'}}
+}
+function roundRect(x,y,w,h,color,r=5){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function render(){
+ ctx.fillStyle='#102d30';ctx.fillRect(0,0,440,440);
+ for(let x=0;x<N;x++)for(let y=0;y<N;y++){ctx.fillStyle=(x+y)%2?'#1d4442':'#1a3e3d';ctx.fillRect(x*S,y*S,S,S)}
+ for(const b of blocks){roundRect(b.x*S+2,b.y*S+2,S-4,S-4,'#bf7754',3);ctx.strokeStyle='#513f35';ctx.lineWidth=2;ctx.strokeRect(b.x*S+5,b.y*S+5,S-10,S-10)}
+ if(food){ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='20px system-ui';ctx.fillText('🍾',food.x*S+S/2,food.y*S+S/2)}
+ snake.forEach((part,i)=>{roundRect(part.x*S+1,part.y*S+1,S-2,S-2,i?'#42c888':'#a7ec78',i?5:7);
+ if(!i){ctx.fillStyle='#16372d';ctx.beginPath();ctx.arc((part.x+.33)*S,(part.y+.34)*S,2.4,0,7);ctx.arc((part.x+.72)*S,(part.y+.34)*S,2.4,0,7);ctx.fill()}})
+}
+function loop(t){const dt=Math.min(60,t-last||0);last=t;if(mode==='play'){accum+=dt;const ms=Math.max(66,180-score*1.45);while(accum>=ms&&mode==='play'){accum-=ms;step()}}render();requestAnimationFrame(loop)}
+E('start').onclick=begin;
+const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]};
+addEventListener('keydown',e=>{if(dir[e.code]){e.preventDefault();turn(...dir[e.code])}if(e.code==='Space'&&mode!=='play'){e.preventDefault();begin()}});
+for(const [id,x,y] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]])E(id).addEventListener('pointerdown',e=>{e.preventDefault();turn(x,y)});
+c.addEventListener('pointerdown',e=>{swipe={x:e.clientX,y:e.clientY}});
+c.addEventListener('pointerup',e=>{if(!swipe)return;const dx=e.clientX-swipe.x,dy=e.clientY-swipe.y;swipe=null;if(Math.max(Math.abs(dx),Math.abs(dy))<15)return;if(Math.abs(dx)>Math.abs(dy))turn(Math.sign(dx),0);else turn(0,Math.sign(dy))});
+requestAnimationFrame(loop);
+})();
+</script></body></html>
