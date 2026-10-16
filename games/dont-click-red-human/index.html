@@ -1,0 +1,78 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0d1425"><meta name="game-title" content="אל תלחץ על האדום — Human"><meta name="game-hidden" content="true"><meta name="game-icon" content="🔴"><meta name="description" content="משחק תגובה שעם כל שלב נהיה קשה ומהיר יותר."><title>אל תלחץ על האדום — Human</title><style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f7f8ff;background:#0d1425; color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overscroll-behavior:none}
+body{background:radial-gradient(circle at 50% 0,#243b60,#0d1425 68%);padding:12px;display:flex;justify-content:center}
+main{width:min(100%,720px);margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+h1{font-size:clamp(22px,5vw,34px);margin:0}.version{font-size:12px;background:#243655;color:#c3daff;border:1px solid #51658c;border-radius:99px;padding:6px 9px;white-space:nowrap}
+.note{font-size:13px;color:#bfcee9;margin:4px 0 0}
+.stats{display:flex;gap:8px;margin-bottom:12px}.stat{flex:1;border:1px solid #445777;background:#1b2a45;border-radius:14px;text-align:center;padding:10px 5px}
+.stat b{font-size:clamp(19px,5vw,29px);display:block;font-variant-numeric:tabular-nums}.stat small{color:#a9bbdb;font-size:12px}
+.stage{position:relative;overflow:hidden;border:2px solid #526c95;border-radius:19px;background:#18273f}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.overlay{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:#101a32cf;padding:15px;backdrop-filter:blur(4px)}
+.overlay[hidden]{display:none}.modal{text-align:center;max-width:430px;width:100%;padding:20px 16px;border:1px solid #58729b;background:#172642f0;border-radius:20px}
+.modal .emoji{font-size:50px}.modal h2{font-size:clamp(22px,5vw,32px);margin:6px 0}.modal p{font-size:15px;line-height:1.6;color:#d1dff5;margin:8px 0 18px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:3px solid #b6d6ff}
+.primary{border:0;background:#a9edab;color:#15331e;border-radius:12px;padding:13px 22px;font-weight:800;min-height:48px}
+.controls{display:flex;gap:12px;margin-top:12px}.controls button{flex:1;min-height:60px;border-radius:15px;background:#344c70;color:white;font-size:19px;font-weight:800;border:1px solid #7191bc;touch-action:none}
+.foot{color:#b4c3db;text-align:center;font-size:12px;line-height:1.6}
+@media(max-width:600px){.stage .overlay{position:fixed;inset:0;overflow-y:auto}.modal{margin:auto}body{padding:9px}.controls{gap:8px}.controls button{min-height:54px}}
+
+.red-stage{padding:20px 14px;min-height:460px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:linear-gradient(155deg,#1f345b,#182439)}
+.rule{min-height:74px;display:grid;place-items:center;text-align:center;font-size:clamp(22px,6vw,35px);font-weight:900}
+.timer{width:100%;height:12px;background:#0f192d;border-radius:20px;overflow:hidden;margin:6px 0 24px}
+#fill{height:100%;width:100%;transform-origin:right;background:#a9edab;transition:background .2s}
+.tiles{width:100%;max-width:500px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;direction:ltr}
+.tile{height:clamp(63px,12vw,105px);border:3px solid #ffffff65;border-radius:19px;box-shadow:inset 0 -8px 0 #0003,0 5px 9px #0004;cursor:pointer;transition:transform .12s}
+.tile:active{transform:scale(.94)}
+@media(max-width:600px){.red-stage{min-height:435px;padding:10px}.rule{min-height:78px}.tiles{gap:7px}.tile{height:clamp(57px,14vw,75px)}}
+</style></head><body><main>
+<header><h1>🔴 אל תלחץ על האדום — Human</h1><span class="version">גרסת Human · בסיס לפיתוח</span></header>
+<div class="stats"><div class="stat"><b id="score">0</b><small>ניקוד</small></div><div class="stat"><b id="round">0</b><small>שלב</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
+<div class="stage red-stage"><div id="rule" class="rule">משחק רפלקסים</div><div class="timer"><div id="fill"></div></div><div class="tiles" id="tiles"></div><div id="overlay" class="overlay"><div class="modal"><div id="icon" class="emoji">🔴</div><h2 id="headline">אל תלחץ על האדום!</h2><p id="explain">לחצו מהר על הצבע הנכון. עם הזמן יהיו יותר כפתורים, הוראות מתחלפות ופחות זמן להגיב. טעות אחת — ונגמר המשחק.</p><button class="primary" id="start">התחל משחק</button></div></div></div>
+<p class="foot">בחרו כפתור בהתאם להוראה. לא מקבלים נקודות על לחיצה שגויה!</p><p class="foot">לחצו על כפתור לפי ההוראה. על כל טעות או איחור המשחק מסתיים.</p></main><script>
+(()=>{'use strict';
+const E=id=>document.getElementById(id),list=E('tiles'),ui={score:E('score'),best:E('best'),round:E('round'),rule:E('rule'),fill:E('fill'),overlay:E('overlay'),icon:E('icon'),title:E('headline'),explain:E('explain')};
+const palette=[{id:'red',name:'אדום',color:'#ed485b'},{id:'blue',name:'כחול',color:'#398eef'},{id:'green',name:'ירוק',color:'#43c78d'},{id:'yellow',name:'צהוב',color:'#f8d66d'}];
+let best=0;try{best=Number(localStorage.getItem('tester-red-human-best-v1'))||0}catch(e){}
+ui.best.textContent=best;let mode='menu',score=0,round=0,rule={},deadline=0,duration=0,shuffleAt=0,tiles=[];
+function modal(icon,title,desc,label){ui.icon.textContent=icon;ui.title.textContent=title;ui.explain.textContent=desc;E('start').textContent=label;ui.overlay.hidden=false}
+function cells(){return round<=5?4:round<=12?6:round<=24?9:12}
+function setup(){
+ const count=cells();tiles=[];
+ for(let i=0;i<count;i++)tiles.push(palette[Math.floor(Math.random()*palette.length)].id);
+ tiles[0]='red';tiles[1]=palette[1+Math.floor(Math.random()*3)].id;
+ for(let i=tiles.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[tiles[i],tiles[j]]=[tiles[j],tiles[i]]}
+ if(round<=7||Math.random()<.35){rule={kind:'avoid',id:'red'};ui.rule.textContent='🚫 אל תלחץ על האדום!'}
+ else{const nonRed=tiles.filter(c=>c!=='red');let id=nonRed[Math.floor(Math.random()*nonRed.length)];rule={kind:'target',id};ui.rule.textContent='✅ לחץ על '+palette.find(p=>p.id===id).name+'!'}
+ list.style.gridTemplateColumns='repeat('+(count<=6?count===4?2:3:count===9?3:4)+',minmax(0,1fr))';
+ render();
+ duration=Math.max(.62,2.65-(round-1)*.075);
+ deadline=performance.now()+duration*1000;
+ shuffleAt=performance.now()+Math.max(480,1100-round*15);
+}
+function render(){list.replaceChildren();for(const id of tiles){const b=document.createElement('button');b.className='tile';b.type='button';b.style.backgroundColor=palette.find(p=>p.id===id).color;b.setAttribute('aria-label',palette.find(p=>p.id===id).name);b.onclick=()=>pick(id);list.appendChild(b)}}
+function pick(id){
+ if(mode!=='play')return;
+ if((rule.kind==='avoid'&&id==='red')||(rule.kind==='target'&&id!==rule.id)){finish('לחצת על הצבע הלא נכון!');return}
+ const remaining=Math.max(0,(deadline-performance.now())/1000);
+ score+=10+Math.floor(remaining*5);ui.score.textContent=score;round++;ui.round.textContent=round;setup();
+}
+function finish(reason){mode='over';if(score>best){best=score;ui.best.textContent=best;try{localStorage.setItem('tester-red-human-best-v1',String(best))}catch(e){}}
+ modal('💥','נפסלת!',reason+' הגעת לשלב '+round+' עם '+score+' נקודות.','נסה שוב')}
+function begin(){mode='play';ui.overlay.hidden=true;round=1;score=0;ui.score.textContent=0;ui.round.textContent=round;setup()}
+function tick(t){
+ if(mode==='play'){
+  const left=deadline-t;ui.fill.style.width=Math.max(0,Math.min(100,left/(duration*1000)*100))+'%';
+  ui.fill.style.background=left<650?'#fa6b7d':'#a9edab';
+  if(left<=0)finish('נגמר הזמן!');
+  else if(round>17&&t>shuffleAt){tiles.sort(()=>Math.random()-.5);render();shuffleAt=t+Math.max(360,1100-round*17)}
+ }
+ requestAnimationFrame(tick)
+}
+E('start').onclick=begin;
+addEventListener('keydown',e=>{if(e.code==='Space'&&mode!=='play'){e.preventDefault();begin()}});
+requestAnimationFrame(tick);
+})();
+</script></body></html>
