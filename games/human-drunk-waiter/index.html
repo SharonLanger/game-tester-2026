@@ -48,7 +48,7 @@
       <div class="modal">
         <div class="emoji" id="icon">🍷</div>
         <h2 id="title">עכשיו זה אישי</h2>
-        <p id="desc">שמרו על המגש מאוזן. ככל שהמצב נעשה מסוכן יותר, הפרצוף על הדמות משתנה — רגוע, מודאג, מופתע ואז בפאניקה.</p>
+        <p id="desc">שמרו על המגש מאוזן. ככל שהמצב נעשה מסוכן יותר, הפרצוף על הדמות משתנה — שמח, מודאג, מופתע ואז מפוחד.</p>
         <button id="start" class="primary">יאללה, לא להפיל!</button>
       </div>
     </div>
@@ -67,16 +67,18 @@ const KEY='tester-human-drunk-waiter-best-v1';
 let best=0; try{best=Number(localStorage.getItem(KEY))||0}catch(e){}
 E('best').textContent=best;
 
+// Face selection follows the tester-approved image numbers:
+// 4 = happy (balanced); 2 = worried; 3 = surprised; 1 = scared (near failure).
 const faces={
-  calm:new Image(),
+  happy:new Image(),
   worried:new Image(),
   surprised:new Image(),
-  panicked:new Image()
+  scared:new Image()
 };
-faces.calm.src='assets/calm.webp';
-faces.worried.src='assets/worried.webp';
-faces.surprised.src='assets/surprised.webp';
-faces.panicked.src='assets/panicked.webp';
+faces.happy.src='assets/panicked.webp';  // Image 4
+faces.worried.src='assets/worried.webp'; // Image 2
+faces.surprised.src='assets/surprised.webp'; // Image 3
+faces.scared.src='assets/calm.webp';     // Image 1
 
 let mode='ready',elapsed=0,score=0,cups=2,angle=.035,angularVel=0,slide=0,slideV=0,left=false,right=false,nextCup=8,flash=0,last=0;
 
@@ -99,10 +101,10 @@ function update(dt){
 }
 function currentFace(){
   const danger=Math.max(Math.abs(angle)/0.67,Math.abs(slide)/117);
-  if(danger<0.28) return faces.calm;
+  if(danger<0.28) return faces.happy;
   if(danger<0.55) return faces.worried;
   if(danger<0.8) return faces.surprised;
-  return faces.panicked;
+  return faces.scared;
 }
 function drawFace(img,x,y,w,h){
   if(!img.complete) return;
@@ -153,7 +155,7 @@ function render(){
   if(flash>0){drawRoundedRect(100,97,240,44,12,'#334861c5');g.fillStyle='#fff';g.font='bold 19px system-ui';g.textAlign='center';g.fillText('עוד כוס! 🍹',220,125)}
 
   const danger=Math.max(Math.abs(angle)/0.67,Math.abs(slide)/117);
-  const faceLabel=danger<0.28?'רגוע':danger<0.55?'מודאג':danger<0.8?'מופתע':'בפאניקה';
+  const faceLabel=danger<0.28?'שמח':danger<0.55?'מודאג':danger<0.8?'מופתע':'מפוחד';
   g.fillStyle='#1f3147cc';g.beginPath();g.roundRect(12,12,106,30,9);g.fill();
   g.fillStyle='#fff';g.font='bold 15px system-ui';g.textAlign='center';g.fillText('מצב: '+faceLabel,65,32);
 }
