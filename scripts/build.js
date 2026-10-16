@@ -3,7 +3,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const out = path.join(root, 'dist');
+const dist = path.join(root, 'dist');
+const out = path.join(dist, 'human');
 const gamesDir = path.join(root, 'games');
 
 function findGameFiles(folder, prefix = '') {
@@ -51,11 +52,12 @@ const games = visiblePaths.map(file => {
   const title = meta(src,'game-title') || decodeHTML((src.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1] || '') || id;
   return { id, title: title.trim(), description: meta(src,'description').trim(), icon: meta(src,'game-icon').trim() || '🎮', path: file };
 });
-fs.rmSync(out, { recursive:true, force:true });
+fs.rmSync(dist, { recursive:true, force:true });
 fs.mkdirSync(out, { recursive:true });
 for (const file of ['index.html','play.html','style.css','site.js'])
   fs.copyFileSync(path.join(root,file),path.join(out,file));
 fs.cpSync(gamesDir,path.join(out,'games'),{recursive:true});
+fs.cpSync(path.join(root,'assets'),path.join(out,'assets'),{recursive:true});
 fs.writeFileSync(path.join(out,'games-list.js'),'/* Automatically generated; do not edit. */\nwindow.GAME_LIST = ' + JSON.stringify(games,null,2) + ';\n');
 
 // A profile is exactly a folder containing images/happy.webp, worried.webp,
