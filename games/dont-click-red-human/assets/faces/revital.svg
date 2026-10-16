@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="244" height="425" viewBox="0 0 244 425" role="img" aria-label="Revital">
   <defs><clipPath id="frame"><rect width="244" height="425"/></clipPath></defs>
   <g clip-path="url(#frame)">
-    <image href="../../../../human-drunk-waiter/revital/images/happy.webp" x="-90.5" y="0" width="425" height="425" preserveAspectRatio="none"/>
+    <image href="../../../human-drunk-waiter/revital/images/happy.webp" x="-90.5" y="0" width="425" height="425" preserveAspectRatio="none"/>
   </g>
 </svg>
