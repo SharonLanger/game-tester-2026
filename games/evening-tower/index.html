@@ -1,0 +1,72 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111827"><meta name="game-title" content="המגדל של הערב"><meta name="game-icon" content="🥤"><meta name="description" content="הניחו כוס על כוס בתזמון הנכון. כל פספוס הופך את המגדל לצר יותר!"><title>המגדל של הערב</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f8f6ff;background:#111728;color-scheme:dark}*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overscroll-behavior:none}body{background:radial-gradient(circle at top,#4f345b,#111728 65%);display:flex;justify-content:center;padding:10px}
+main{width:min(100%,620px);margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:10px}h1{font-size:clamp(22px,5vw,32px);margin:0}.tag{border-radius:99px;background:#443255;border:1px solid #86669b;color:#e8cdf5;font-size:12px;padding:7px 11px}
+.stats{display:flex;gap:8px;margin-bottom:10px}.stat{flex:1;text-align:center;background:#2a2343;border:1px solid #584c75;border-radius:13px;padding:9px 4px}.stat b{display:block;font-size:26px;font-variant-numeric:tabular-nums}.stat small{font-size:12px;color:#cbbddb}
+.stage{border:2px solid #755b8a;border-radius:17px;overflow:hidden;position:relative;background:#d6c2e0}canvas{display:block;width:100%;height:auto;touch-action:none}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;background:#13162cce;backdrop-filter:blur(4px)}.overlay[hidden]{display:none}
+.modal{background:#292744f2;border:1px solid #9277b0;border-radius:20px;padding:20px 16px;text-align:center;max-width:420px;width:100%}.emoji{font-size:48px}.modal h2{margin:6px 0;font-size:30px}.modal p{color:#e6dced;line-height:1.65;font-size:15px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}.primary{border:0;background:#e9b6f4;color:#351b40;border-radius:12px;padding:13px 25px;font-size:17px;font-weight:900}
+.drop{display:block;width:100%;margin-top:11px;min-height:62px;font-size:21px;font-weight:900;background:#635083;color:white;border:1px solid #ae8bd3;border-radius:16px}
+.guide{text-align:center;font-size:12px;color:#c7bad7;line-height:1.6;margin:8px 0}
+@media(max-width:600px){.overlay{position:fixed;inset:0;z-index:5;overflow-y:auto}.modal{margin:auto}.drop{min-height:53px}}
+</style></head><body><main>
+<header><h1>🥤 המגדל של הערב</h1><span class="tag">גרסת בדיקה 1.0</span></header>
+<div class="stats"><div class="stat"><b id="score">0</b><small>נקודות</small></div><div class="stat"><b id="floors">0</b><small>כוסות במגדל</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
+<div class="stage"><canvas id="canvas" width="440" height="600"></canvas>
+<div id="overlay" class="overlay"><div class="modal"><div class="emoji" id="icon">🥤</div><h2 id="title">כמה גבוה תגיעו?</h2><p id="desc">כוס זזה מצד לצד. הקישו כשהיא בדיוק מעל המגדל. החלק שלא פגע נחתך, והכוס הבאה קטנה יותר. המהירות עולה בכל קומה!</p><button class="primary" id="start">בונים מגדל!</button></div></div></div>
+<button class="drop" id="drop">⬇ הניחו את הכוס!</button>
+<p class="guide">אפשר גם ללחוץ על שטח המשחק או על רווח במקלדת. כוס שמונחת מושלם מקבלת בונוס.</p></main>
+<script>
+(()=>{'use strict';
+const c=document.getElementById('canvas'),g=c.getContext('2d'),E=id=>document.getElementById(id);
+const W=440,H=600,LEVEL=31,BASEY=536,KEY='tester-tower-best-v1';
+let best=0;try{best=Number(localStorage.getItem(KEY))||0}catch(e){}E('best').textContent=best;
+let mode='ready',placed=[],moving=null,score=0,perfect=0,last=0,elapsed=0,flash='',flashTime=0;
+function modal(icon,title,desc,label){E('icon').textContent=icon;E('title').textContent=title;E('desc').textContent=desc;E('start').textContent=label;E('overlay').hidden=false}
+function spawn(){const prev=placed[placed.length-1];moving={x:placed.length%2?0:W-prev.w,w:prev.w,y:prev.y-LEVEL,dir:placed.length%2?1:-1}}
+function begin(){placed=[{x:130,w:180,y:BASEY}];score=0;perfect=0;elapsed=0;flash='';flashTime=0;mode='play';E('score').textContent=0;E('floors').textContent=0;E('overlay').hidden=true;spawn()}
+function finish(){mode='over';if(score>best){best=score;E('best').textContent=best;try{localStorage.setItem(KEY,String(best))}catch(e){}}
+ modal('💥','המגדל קרס!','הצלחתם לבנות '+(placed.length-1)+' כוסות וצברתם '+score+' נקודות.','בואו נבנה שוב')}
+function drop(){
+ if(mode!=='play'||!moving)return;
+ const prev=placed[placed.length-1],overlapLeft=Math.max(moving.x,prev.x),overlapRight=Math.min(moving.x+moving.w,prev.x+prev.w),w=overlapRight-overlapLeft;
+ if(w<9){finish();return}
+ const perfectDrop=Math.abs(moving.x-prev.x)<5;
+ if(perfectDrop){perfect++;placed.push({x:prev.x,w:prev.w,y:moving.y})}
+ else{perfect=0;placed.push({x:overlapLeft,w,y:moving.y})}
+ score+=100+(perfectDrop?75:0);
+ E('score').textContent=score;E('floors').textContent=placed.length-1;
+ flash=perfectDrop?'מושלם! 🎯':'יפה!';flashTime=.65;spawn();
+}
+function cup(x,y,w,fill=.38,glass=false){
+ const h=LEVEL-2;
+ g.fillStyle=glass?'#99f5edba':'#f7f9ffbd';g.beginPath();g.moveTo(x,y);g.lineTo(x+w,y);g.lineTo(x+w-4,y+h);g.lineTo(x+4,y+h);g.closePath();g.fill();
+ g.fillStyle=glass?'#6ce3de91':w<28?'#de579d91':'#ed8ec39c';g.beginPath();g.moveTo(x+4,y+h*(1-fill));g.lineTo(x+w-4,y+h*(1-fill));g.lineTo(x+w-6,y+h-3);g.lineTo(x+6,y+h-3);g.closePath();g.fill();
+ g.strokeStyle=glass?'#ffffff':'#765c90';g.lineWidth=2.2;g.beginPath();g.ellipse(x+w/2,y+2,w/2,4.3,0,0,Math.PI*2);g.stroke();
+ g.fillStyle='#ffffff7d';g.fillRect(x+Math.min(7,w/4),y+8,Math.max(1,Math.min(4,w*.1)),Math.min(12,h-9));
+}
+function render(){
+ const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#6f5c9d');sky.addColorStop(1,'#f1c4d2');g.fillStyle=sky;g.fillRect(0,0,W,H);
+ for(let i=0;i<18;i++){const x=24+(i*83)%W,y=55+(i*127)%400;g.fillStyle=i%2?'#fff4b25c':'#ffe0f65c';g.beginPath();g.arc(x,y,3+(i%3),0,Math.PI*2);g.fill()}
+ const offset=Math.max(0,202-(moving?moving.y:BASEY));g.fillStyle='#80587b';g.fillRect(0,BASEY+LEVEL+offset,W,50);
+ placed.forEach((cupBlock,i)=>cup(cupBlock.x,cupBlock.y+offset,cupBlock.w,.42+i*.03% .35));
+ if(moving)cup(moving.x,moving.y+offset,moving.w,.25,true);
+ if(moving){const reference=placed[placed.length-1];g.strokeStyle='#ffffff70';g.setLineDash([7,8]);g.lineWidth=2;g.strokeRect(reference.x,moving.y+offset,reference.w,LEVEL-2);g.setLineDash([])}
+ if(flashTime>0){g.fillStyle='#342347ad';g.fillRect(105,100,230,56);g.fillStyle='#fff';g.textAlign='center';g.font='bold 25px system-ui';g.fillText(flash,220,137)}
+ g.textAlign='left';g.fillStyle='#3b2851';g.font='bold 16px system-ui';g.fillText('מהירות ×'+(1+((placed.length-1)*.085)).toFixed(1),14,25);
+}
+function loop(t){
+ const dt=Math.min(.036,(t-last)/1000||0);last=t;
+ if(mode==='play'){
+ elapsed+=dt;flashTime=Math.max(0,flashTime-dt);
+ let velocity=165+Math.min(410,(placed.length-1)*18);
+ moving.x+=moving.dir*velocity*dt;
+ if(moving.x<=0){moving.x=0;moving.dir=1}else if(moving.x+moving.w>=W){moving.x=W-moving.w;moving.dir=-1}
+ }render();requestAnimationFrame(loop)}
+E('start').onclick=begin;E('drop').onclick=drop;c.addEventListener('pointerdown',e=>{e.preventDefault();drop()});
+addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();if(mode==='play')drop();else begin()}});
+requestAnimationFrame(loop);
+})();
+</script></body></html>
