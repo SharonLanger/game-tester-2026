@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#111a2f">
+<meta name="game-title" content="רוץ על חייך">
+<meta name="game-icon" content="🦖">
+<meta name="description" content="ריצה אינסופית: קופצים מעל מכשולים, מתכופפים מתחת למגשים ושוברים שיאים. הקצב עולה כל הזמן!">
+<title>רוץ על חייך</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f5f7ff;background:#0e1527}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overscroll-behavior:none}
+body{background:radial-gradient(ellipse at 50% 5%,#293255 0,#0e1527 70%);padding:clamp(10px,2vw,26px);display:flex;justify-content:center;align-items:flex-start}
+.shell{width:min(100%,1000px);margin:auto}
+.heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.heading h1{font-size:clamp(21px,4vw,32px);margin:0;font-weight:900;letter-spacing:-.5px}
+.heading p{margin:4px 0 0;color:#adbde0;font-size:13px}
+.pill{font-size:12px;border-radius:50px;padding:7px 12px;background:#243552;border:1px solid #49628a;color:#c5ddfc;white-space:nowrap}
+.board{display:flex;gap:10px;margin-bottom:12px}
+.stat{background:#1b2841;border:1px solid #354867;border-radius:14px;padding:10px 15px;flex:1;min-width:0;text-align:center}
+.stat b{display:block;font-size:clamp(18px,3.8vw,29px);font-variant-numeric:tabular-nums}
+.stat small{color:#a9b8d5;font-size:12px}
+.frame{position:relative;background:#b9e8f0;border:3px solid #445577;border-radius:19px;overflow:hidden;box-shadow:0 12px 35px #0006}
+canvas{width:100%;height:auto;aspect-ratio:960/420;display:block;touch-action:none}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:#11182cb9;backdrop-filter:blur(4px);text-align:center}
+.overlay[hidden]{display:none}
+.panel{max-width:490px;width:100%;background:#13213bed;color:#fff;padding:clamp(16px,3.5vw,30px);border-radius:20px;border:1px solid #7ba1c5;box-shadow:0 12px 40px #0005}
+.panel .emoji{font-size:clamp(27px,5.5vw,55px);line-height:1.1}
+.panel h2{font-size:clamp(22px,4.5vw,36px);margin:6px 0 8px}
+.panel p{color:#dce7fc;font-size:clamp(12px,2.2vw,17px);line-height:1.55;margin:0 0 16px}
+.primary{font:inherit;font-weight:850;font-size:17px;border:0;border-radius:13px;background:#a6ed9d;color:#173123;padding:12px 30px;cursor:pointer;min-width:170px;min-height:48px}
+.primary:active,.control:active{transform:scale(.97)}
+.controls{display:flex;gap:12px;justify-content:center;margin:12px 0 0}
+.control{border-radius:16px;min-height:65px;flex:1;border:1px solid #6278a6;background:#2a3c61;color:#fff;font:inherit;font-size:19px;font-weight:800;cursor:pointer;touch-action:none;user-select:none}
+.control.jump{background:#375d57;border-color:#6ea895}.control.duck{background:#3a426c}
+.hint{text-align:center;color:#b1bed9;font-size:12px;line-height:1.7;margin:10px 0 0}
+kbd{font:inherit;color:#dfe5f7;background:#293650;border-radius:5px;padding:2px 5px}
+@media(min-width:700px){.controls{max-width:570px;margin-inline:auto}.control{min-height:54px}}
+@media(max-width:450px){body{padding:8px}.frame{border-radius:13px}.stat{padding:7px}.board{gap:6px;margin-bottom:8px}.controls{gap:8px;margin-top:8px}.control{min-height:62px;font-size:17px}.heading{margin-bottom:8px}.panel{padding:14px}.panel p{margin-bottom:10px}}
+</style>
+</head>
+<body>
+<main class="shell">
+ <div class="heading">
+   <div><h1>🦖 רוץ על חייך</h1><p>קפוץ, התחמק, ונסה לשרוד כמה שיותר</p></div>
+   <span class="pill">גרסת בדיקה 1.0</span>
+ </div>
+ <div class="board">
+   <div class="stat"><b id="score">0</b><small>ניקוד</small></div>
+   <div class="stat"><b id="best">0</b><small>שיא אישי</small></div>
+   <div class="stat"><b id="speed">×1.0</b><small>מהירות</small></div>
+ </div>
+ <div class="frame">
+   <canvas id="world" width="960" height="420" aria-label="דינוזאור רץ בין מכשולים"></canvas>
+   <div id="overlay" class="overlay">
+     <section class="panel" role="status" aria-live="polite">
+       <div class="emoji" id="modalIcon">🦖</div>
+       <h2 id="modalTitle">מוכנים לרוץ?</h2>
+       <p id="modalDescription">קופצים מעל בקבוקים וכיסאות. כשהמגשים מגיעים בגובה הראש — מתכופפים. המשחק הולך ומאיץ!</p>
+       <button type="button" id="start" class="primary">יאללה, מתחילים!</button>
+     </section>
+   </div>
+ </div>
+ <div class="controls">
+   <button type="button" class="control jump" id="jump">⬆️ קפיצה</button>
+   <button type="button" class="control duck" id="duck">⬇️ להתכופף</button>
+ </div>
+ <p class="hint">בטלפון: כפתורים או נגיעה במשחק לקפיצה. במחשב: <kbd>רווח</kbd> / <kbd>↑</kbd> לקפיצה, <kbd>↓</kbd> להתכופפות, <kbd>Esc</kbd> להשהיה. השיא נשמר במכשיר הזה.</p>
+</main>
+<script>
+(() => {
+'use strict';
+const canvas = document.getElementById('world');
+const ctx = canvas.getContext('2d');
+const W=960, H=420, GROUND=335, PX=142;
+const ui={score:document.getElementById('score'),best:document.getElementById('best'),speed:document.getElementById('speed'),
+overlay:document.getElementById('overlay'),icon:document.getElementById('modalIcon'),title:document.getElementById('modalTitle'),
+desc:document.getElementById('modalDescription'),start:document.getElementById('start')};
+const storageKey='game-tester-2026-dino-best-v1';
+let best=0;
+try{best=Math.max(0,Number(localStorage.getItem(storageKey))||0)}catch(e){}
+ui.best.textContent=String(best);
+let state='ready', previous=0, elapsed=0, distance=0, speed=340, score=0, spawnRemaining=750, obstacles=[], particles=[];
+let duckHeld=false, lastMilestone=0;
+const player={height:70,width:58,elevation:0,vy:0};
+function show(icon,title,description,label){
+ ui.icon.textContent=icon;ui.title.textContent=title;ui.desc.textContent=description;ui.start.textContent=label;ui.overlay.hidden=false;
+}
+function hide(){ui.overlay.hidden=true}
+function reset(){
+ state='playing';elapsed=0;distance=0;score=0;speed=340;spawnRemaining=760;
+ obstacles=[];particles=[];player.elevation=0;player.vy=0;duckHeld=false;lastMilestone=0;
+ ui.score.textContent='0';ui.speed.textContent='×1.0';hide();
+}
+function action(){
+ if(state==='ready'||state==='over'){reset();return}
+ if(state==='paused'){state='playing';hide()}
+}
+function jump(){
+ if(state==='ready'||state==='over'){reset()}
+ if(state==='paused'){return}
+ if(player.elevation<=0.1){
+  player.vy=805;player.elevation=1;
+  for(let i=0;i<9;i++)particles.push({x:PX+30,y:GROUND-3,vx:-70-Math.random()*160,vy:-30-Math.random()*90,life:.3+Math.random()*.3});
+ }
+}
+function duck(value){duckHeld=value}
+function stop(){
+ if(state!=='playing')return;
+ state='over';
+ if(score>best){best=score;ui.best.textContent=String(best);try{localStorage.setItem(storageKey,String(best))}catch(e){}}
+ show('💥','אופס, התרסקת!','הגעת ל-'+score.toLocaleString('he-IL')+' נקודות. השיא שלך: '+best.toLocaleString('he-IL')+'. אפשר לנסות שוב ולשפר.','משחק חוזר ↻');
+}
+function pause(){
+ if(state==='playing'){state='paused';show('⏸️','המשחק בהשהיה','אפשר להמשיך בדיוק מאותו מקום.','המשך משחק ▶')}
+ else if(state==='paused'){state='playing';hide()}
+}
+function spawn(){
+ const rand=Math.random();
+ let type='bottle';
+ if(elapsed>16 && rand>.79)type='tray';
+ else if(rand>.55)type='chair';
+ else if(rand>.29)type='crate';
+ const sizes={bottle:{w:33,h:69,offset:0},chair:{w:63,h:89,offset:0},
+ crate:{w:62,h:54,offset:0},tray:{w:83,h:27,offset:53}};
+ const s=sizes[type];
+ obstacles.push({type,x:W+20,w:s.w,h:s.h,offset:s.offset});
+ spawnRemaining=speed*(1.05+Math.random()*.52)+100;
+}
+function collision(a,b){return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top}
+function update(dt){
+ elapsed+=dt;
+ speed=340+Math.min(475,elapsed*7.5);
+ distance+=speed*dt;score=Math.floor(distance/17);
+ ui.score.textContent=score.toLocaleString('he-IL');
+ ui.speed.textContent='×'+(speed/340).toFixed(1);
+ player.elevation+=player.vy*dt;
+ player.vy-=2100*dt;
+ if(player.elevation<=0){player.elevation=0;player.vy=0}
+ spawnRemaining-=speed*dt;
+ if(spawnRemaining<=0)spawn();
+ for(const o of obstacles)o.x-=speed*dt;
+ obstacles=obstacles.filter(o=>o.x+o.w>-50);
+ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}
+ particles=particles.filter(p=>p.life>0);
+ const crouch=duckHeld&&player.elevation===0;
+ const ph=crouch?39:70;
+ const p={left:PX+12,right:PX+(crouch?64:51),top:GROUND-player.elevation-ph+8,bottom:GROUND-player.elevation-4};
+ for(const o of obstacles){
+  const b={left:o.x+6,right:o.x+o.w-6,top:GROUND-o.offset-o.h+5,bottom:GROUND-o.offset-3};
+  if(collision(p,b)){stop();break}
+ }
+ if(Math.floor(score/250)>lastMilestone)lastMilestone=Math.floor(score/250);
+}
+function rect(x,y,w,h,color,r=0){
+ ctx.fillStyle=color;
+ if(r&&ctx.roundRect){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+ else ctx.fillRect(x,y,w,h);
+}
+function scenery(){
+ const sky=ctx.createLinearGradient(0,0,0,GROUND);
+ sky.addColorStop(0,'#a0d8f4');sky.addColorStop(1,'#d8f1e1');
+ ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ const shift=distance*.14;
+ ctx.fillStyle='#d8e8e5';
+ for(let i=-1;i<9;i++){
+  const x=i*160-(shift%160);
+  ctx.beginPath();ctx.arc(x+50,202,80,Math.PI,0);ctx.fill();
+ }
+ ctx.fillStyle='#c4e1cc';
+ for(let i=-1;i<12;i++){
+  const x=i*118-(shift*1.7%118);
+  ctx.beginPath();ctx.moveTo(x,GROUND);ctx.lineTo(x+65,242);ctx.lineTo(x+135,GROUND);ctx.fill();
+ }
+ rect(0,GROUND,W,H-GROUND,'#4e6072');
+ rect(0,GROUND,W,9,'#93d8a5');
+ rect(0,GROUND+16,W,4,'#3b495c');
+ const lineShift=distance%100;
+ for(let x=-100-lineShift;x<W+100;x+=100)rect(x,GROUND+57,48,5,'#91a4b6',2);
+ for(let i=-1;i<9;i++){
+  const x=i*155-(distance*.28%155);
+  ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(x+28,68,12,0,Math.PI*2);ctx.arc(x+43,65,18,0,Math.PI*2);ctx.arc(x+60,70,12,0,Math.PI*2);ctx.fill();
+ }
+}
+function drawRunner(){
+ const crouch=duckHeld&&player.elevation===0;
+ const x=PX,y=GROUND-player.elevation;
+ ctx.save();ctx.translate(x,y);
+ const step=Math.sin(elapsed*20)*(state==='playing'&&player.elevation===0?8:1);
+ if(!crouch){
+  rect(12,-63,42,49,'#2a9d72',11);
+  rect(34,-81,35,31,'#38b888',9);
+  rect(59,-74,15,11,'#38b888',4);
+  // spines
+  ctx.fillStyle='#16694e';ctx.beginPath();ctx.moveTo(17,-64);ctx.lineTo(22,-78);ctx.lineTo(32,-64);ctx.lineTo(37,-76);ctx.lineTo(45,-61);ctx.fill();
+  rect(6,-40,22,12,'#238464',6);
+  rect(16,-21+step,13,23,'#176b53',5);
+  rect(40,-21-step,13,23,'#176b53',5);
+  rect(48,-38,15,9,'#a8e0a9',4);
+  rect(53,-74,7,8,'#fff',3);rect(57,-73,3,4,'#21334b',2);
+ }else{
+  rect(5,-36,63,34,'#2a9d72',12);
+  rect(51,-47,26,29,'#38b888',9);
+  rect(68,-34,17,9,'#38b888',4);
+  rect(15,-10+step*.3,16,12,'#176b53',4);
+  rect(46,-10-step*.3,16,12,'#176b53',4);
+  rect(65,-39,7,7,'#fff',3);rect(68,-38,3,4,'#21334b',2);
+ }
+ ctx.restore();
+}
+function drawObstacle(o){
+ const x=o.x,y=GROUND-o.offset;
+ if(o.type==='bottle'){
+  rect(x+6,y-51,21,51,'#e1a157',5);rect(x+10,y-68,13,20,'#985c34',3);
+  rect(x+8,y-34,17,20,'#ffcf77',2);
+  rect(x+4,y-4,26,5,'#8e5938',2);
+ }else if(o.type==='chair'){
+  rect(x+7,y-86,12,68,'#925942',4);
+  rect(x+8,y-42,47,13,'#bb7655',4);
+  rect(x+12,y-31,9,31,'#764632',2);
+  rect(x+47,y-31,9,31,'#764632',2);
+  rect(x+41,y-86,8,45,'#925942',3);
+ }else if(o.type==='crate'){
+  rect(x+2,y-52,58,52,'#a86a45',4);
+  rect(x+11,y-42,40,34,'#bf885d');
+  ctx.strokeStyle='#7a493a';ctx.lineWidth=6;ctx.beginPath();
+  ctx.moveTo(x+13,y-40);ctx.lineTo(x+47,y-9);ctx.moveTo(x+47,y-40);ctx.lineTo(x+13,y-9);ctx.stroke();
+ }else if(o.type==='tray'){
+  // low flying party tray: duck underneath it
+  rect(x+2,y-8,77,8,'#6d77a0',4);
+  rect(x+10,y-15,60,6,'#c7d7eb',3);
+  rect(x+22,y-28,16,14,'#b76791',3);rect(x+41,y-33,16,19,'#8ebfbc',3);
+  ctx.strokeStyle='#faf6d2';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+31,y-28);ctx.lineTo(x+35,y-44);ctx.stroke();
+ }
+}
+function draw(){
+ scenery();
+ for(const o of obstacles)drawObstacle(o);
+ for(const p of particles){ctx.globalAlpha=Math.max(0,Math.min(1,p.life*2));rect(p.x,p.y,5,5,'#b5ebcf',3)}
+ ctx.globalAlpha=1;
+ drawRunner();
+ if(state==='playing'&&score>250&&score<290){rect(350,30,260,37,'#15213dc9',12);ctx.fillStyle='#fff';ctx.font='bold 19px system-ui';ctx.textAlign='center';ctx.fillText('🔥 הקצב מתחיל לעלות!',480,55)}
+}
+function frame(now){
+ const dt=Math.min((now-previous)/1000||0,.034);previous=now;
+ if(state==='playing')update(dt);
+ draw();requestAnimationFrame(frame);
+}
+ui.start.addEventListener('click',action);
+document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
+const duckBtn=document.getElementById('duck');
+duckBtn.addEventListener('pointerdown',e=>{e.preventDefault();duck(true);duckBtn.setPointerCapture?.(e.pointerId)});
+['pointerup','pointercancel','lostpointercapture'].forEach(event=>duckBtn.addEventListener(event,()=>duck(false)));
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();jump()});
+document.addEventListener('keydown',e=>{
+ const key=e.code;
+ if(['Space','ArrowUp','ArrowDown','Escape'].includes(key))e.preventDefault();
+ if((key==='Space'||key==='ArrowUp')&&!e.repeat)jump();
+ if(key==='ArrowDown')duck(true);
+ if(key==='Escape')pause();
+});
+document.addEventListener('keyup',e=>{if(e.code==='ArrowDown')duck(false)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});
+window.addEventListener('blur',()=>{duck(false);if(state==='playing')pause()});
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
