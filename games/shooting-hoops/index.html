@@ -1,0 +1,77 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#121c32"><meta name="game-title" content="קליעה לסל"><meta name="game-icon" content="🏀"><meta name="description" content="זורקים כדורים לסל בתנועה, קולעים קומבואים ונלחמים נגד השעון!"><title>קליעה לסל</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f5f7ff;background:#101827;color-scheme:dark}*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overscroll-behavior:none}body{background:radial-gradient(circle at top,#314467,#101827 66%);padding:10px;display:flex;justify-content:center}main{width:min(100%,650px);margin:auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}h1{margin:0;font-size:clamp(24px,5.5vw,33px)}.tag{background:#263a5b;border-radius:99px;padding:7px 10px;color:#c5d7f6;font-size:12px}
+.stats{display:flex;gap:8px;margin-bottom:10px}.stat{background:#1c2e49;border:1px solid #445c7c;border-radius:13px;text-align:center;flex:1;padding:9px 4px}.stat b{font-size:25px;display:block;font-variant-numeric:tabular-nums}.stat small{color:#b0c1d9;font-size:12px}
+.stage{border:2px solid #5174a2;border-radius:17px;overflow:hidden;position:relative;background:#d8e8e3}canvas{display:block;width:100%;height:auto;touch-action:none}
+.overlay{position:absolute;inset:0;background:#0f1d36d6;backdrop-filter:blur(4px);padding:14px;display:flex;justify-content:center;align-items:center}
+.overlay[hidden]{display:none}.modal{border-radius:20px;border:1px solid #607da0;max-width:440px;width:100%;background:#1d304ef0;padding:20px 15px;text-align:center}.emoji{font-size:44px}.modal h2{font-size:28px;margin:8px 0}.modal p{line-height:1.6;color:#d0dded;font-size:15px}
+button{font:inherit;cursor:pointer}.primary{border:0;border-radius:13px;padding:13px 26px;background:#f6c568;color:#33210a;font-weight:900;font-size:18px}
+.guide{text-align:center;font-size:13px;color:#b8c8dc;line-height:1.6;margin:10px 0 0}
+@media(max-width:600px){.overlay{position:fixed;inset:0;z-index:5;overflow-y:auto}.modal{margin:auto}}
+</style></head><body><main>
+<header><h1>🏀 קליעה לסל</h1><span class="tag">גרסת בדיקה 1.0</span></header>
+<div class="stats"><div class="stat"><b id="score">0</b><small>ניקוד</small></div><div class="stat"><b id="clock">60</b><small>שניות</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
+<div class="stage"><canvas id="canvas" width="420" height="570"></canvas><div class="overlay" id="overlay"><div class="modal"><div class="emoji" id="icon">🏀</div><h2 id="title">מי קולע יותר?</h2><p id="desc">החליקו את האצבע מהכדור אל הכיוון שאליו רוצים לכוון, ושחררו כדי לזרוק. יש לכם 60 שניות. הסל מתחיל לזוז מהר יותר!</p><button id="start" class="primary">יאללה, קולעים!</button></div></div></div>
+<p class="guide">גררו מהכדור לכיוון הסל ושחררו. אפשר גם עם עכבר במחשב. כל קליעה שווה 100 נקודות, קומבו מוסיף בונוס.</p></main>
+<script>
+(()=>{'use strict';
+const c=document.querySelector('#canvas'),g=c.getContext('2d'),W=420,H=570,E=id=>document.getElementById(id);
+const ui={score:E('score'),clock:E('clock'),best:E('best'),overlay:E('overlay'),icon:E('icon'),title:E('title'),desc:E('desc')};
+const ORIGIN={x:210,y:485},KEY='tester-basket-best-v1';
+let best=0;try{best=Number(localStorage.getItem(KEY))||0}catch(e){}ui.best.textContent=best;
+let mode='ready',score=0,time=60,elapsed=0,combo=0,ball=null,aim=null,drag=false,resetDelay=0,hoopX=210,hoopY=240,hoopWidth=90,hoopVel=0,last=0,flash=0;
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+function overlay(ico,title,desc,label){ui.icon.textContent=ico;ui.title.textContent=title;ui.desc.textContent=desc;E('start').textContent=label;ui.overlay.hidden=false}
+function reset(){mode='playing';score=0;time=60;elapsed=0;combo=0;ball=null;aim=null;drag=false;resetDelay=0;hoopX=210;flash=0;ui.score.textContent=0;ui.clock.textContent=60;ui.overlay.hidden=true}
+function finish(){mode='done';if(score>best){best=score;ui.best.textContent=best;try{localStorage.setItem(KEY,String(best))}catch(e){}}overlay('🏆','נגמר הזמן!','צברת '+score+' נקודות. כמה תקלע בסיבוב הבא?','סיבוב נוסף')}
+function pos(ev){const r=c.getBoundingClientRect();return{x:(ev.clientX-r.left)*W/r.width,y:(ev.clientY-r.top)*H/r.height}}
+function press(e){if(mode!=='playing'||ball||resetDelay>0)return;e.preventDefault();drag=true;aim=pos(e);c.setPointerCapture?.(e.pointerId)}
+function move(e){if(!drag)return;e.preventDefault();aim=pos(e)}
+function release(e){if(!drag||mode!=='playing')return;e.preventDefault();drag=false;aim=pos(e);const dx=clamp(aim.x-ORIGIN.x,-250,250),dy=clamp(aim.y-ORIGIN.y,-360,-60);ball={x:ORIGIN.x,y:ORIGIN.y,vx:dx/1.48,vy:clamp(dy*2.7,-920,-755),r:14,age:0,scored:false};aim=null}
+c.addEventListener('pointerdown',press);c.addEventListener('pointermove',move);c.addEventListener('pointerup',release);c.addEventListener('pointercancel',()=>{drag=false;aim=null});
+E('start').onclick=reset;
+function update(dt){
+ elapsed+=dt;time=Math.max(0,60-elapsed);ui.clock.textContent=Math.ceil(time);if(time===0){finish();return}
+ const amplitude=clamp((elapsed-6)*2.1,0,125),frequency=1.1+elapsed*.018;
+ hoopX=210+Math.sin(elapsed*frequency)*amplitude;hoopWidth=clamp(96-elapsed*.45,65,96);hoopVel=Math.cos(elapsed*frequency)*amplitude*frequency;
+ flash=Math.max(0,flash-dt);
+ if(resetDelay>0)resetDelay-=dt;
+ if(ball){const b=ball,oldY=b.y;b.age+=dt;b.vy+=850*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
+   if(!b.scored&&b.vy>0&&oldY+b.r<=hoopY+2&&b.y+b.r>=hoopY+2&&Math.abs(b.x-hoopX)<hoopWidth/2-7){
+    b.scored=true;combo++;score+=100+Math.min(200,(combo-1)*25);ui.score.textContent=score;flash=.45;resetDelay=.35;
+   }
+   if((b.y>H+30||b.x<-70||b.x>W+70||b.age>3.2||b.scored&&resetDelay<=0)){
+     if(!b.scored)combo=0;ball=null;resetDelay=Math.max(resetDelay,.13);
+   }
+ }
+}
+function line(x1,y1,x2,y2,color,width=2){g.strokeStyle=color;g.lineWidth=width;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function drawBall(x,y,r){
+ g.save();g.translate(x,y);g.fillStyle='#f28b31';g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.fill();g.strokeStyle='#793917';g.lineWidth=2;
+ g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.moveTo(-r,0);g.lineTo(r,0);g.moveTo(0,-r);g.lineTo(0,r);g.stroke();
+ g.restore()
+}
+function render(){
+ const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#79b4d9');sky.addColorStop(1,'#f7d9ac');g.fillStyle=sky;g.fillRect(0,0,W,H);
+ g.fillStyle='#9e9bbb';for(let i=0;i<7;i++){const x=i*70;g.fillRect(x,H-195,50,160+(i%3)*28)}
+ g.fillStyle='#427455';g.fillRect(0,H-88,W,88);g.fillStyle='#406d8c';g.fillRect(0,H-83,W,11);
+ g.strokeStyle='#ecf1eeaa';g.lineWidth=3;g.beginPath();g.arc(W/2,H-20,100,Math.PI,Math.PI*2);g.stroke();
+ const hx=hoopX,hy=hoopY,w=hoopWidth;
+ g.fillStyle='#405976';g.fillRect(hx+55,hy-91,12,H-hy+25);
+ g.fillStyle='#ecf4fa';g.fillRect(hx-9,hy-112,84,108);
+ g.strokeStyle='#cf773f';g.lineWidth=6;g.strokeRect(hx-9,hy-112,84,108);
+ g.strokeStyle=flash?'#fff193':'#eb572c';g.lineWidth=7;g.beginPath();g.moveTo(hx-w/2,hy);g.lineTo(hx+w/2,hy);g.stroke();
+ g.strokeStyle='#eaf4f7';g.lineWidth=2;
+ for(let i=0;i<7;i++){const x=hx-w/2+i*w/6;line(x,hy+3,hx+(x-hx)*.45,hy+58,'#dfeaf7',2)}
+ g.beginPath();g.moveTo(hx-w/2+1,hy+3);g.lineTo(hx-w/4,hy+58);g.lineTo(hx+w/4,hy+58);g.lineTo(hx+w/2-1,hy+3);g.stroke();
+ if(ball)drawBall(ball.x,ball.y,ball.r);else drawBall(ORIGIN.x,ORIGIN.y,17);
+ if(drag&&aim){line(ORIGIN.x,ORIGIN.y,aim.x,aim.y,'#ffffeedb',3);
+ g.strokeStyle='#fff';g.setLineDash([7,7]);g.beginPath();g.arc(aim.x,aim.y,13,0,2*Math.PI);g.stroke();g.setLineDash([])}
+ g.textAlign='left';g.fillStyle='#234660';g.font='bold 15px system-ui';g.fillText(combo>1?'🔥 קומבו ×'+combo:'כוונו וזרקו!',15,25);
+ if(mode==='playing'&&!ball&&resetDelay<=0&&elapsed<4){g.fillStyle='#263c59b0';g.fillRect(72,510,276,33);g.textAlign='center';g.fillStyle='#fff';g.fillText('גררו מהכדור לכיוון הסל',210,531)}
+}
+function loop(t){const dt=Math.min(.04,(t-last)/1000||0);last=t;if(mode==='playing')update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+})();
+</script></body></html>
