@@ -22,7 +22,7 @@ body{background:radial-gradient(ellipse at 50% 5%,#293255 0,#0e1527 70%);padding
 .stat b{display:block;font-size:clamp(18px,3.8vw,29px);font-variant-numeric:tabular-nums}
 .stat small{color:#a9b8d5;font-size:12px}
 .frame{position:relative;background:#b9e8f0;border:3px solid #445577;border-radius:19px;overflow:hidden;box-shadow:0 12px 35px #0006}
-canvas{width:100%;height:auto;aspect-ratio:960/420;display:block;touch-action:none}
+canvas{width:100%;height:auto;display:block;touch-action:none}
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:#11182cb9;backdrop-filter:blur(4px);text-align:center}
 .overlay[hidden]{display:none}
 .panel{max-width:490px;width:100%;background:#13213bed;color:#fff;padding:clamp(16px,3.5vw,30px);border-radius:20px;border:1px solid #7ba1c5;box-shadow:0 12px 40px #0005}
@@ -37,6 +37,7 @@ canvas{width:100%;height:auto;aspect-ratio:960/420;display:block;touch-action:no
 .hint{text-align:center;color:#b1bed9;font-size:12px;line-height:1.7;margin:10px 0 0}
 kbd{font:inherit;color:#dfe5f7;background:#293650;border-radius:5px;padding:2px 5px}
 @media(min-width:700px){.controls{max-width:570px;margin-inline:auto}.control{min-height:54px}}
+@media(max-width:600px){.overlay{position:fixed;inset:0;z-index:100;padding:18px;overflow-y:auto}.panel{margin:auto}}
 @media(max-width:450px){body{padding:8px}.frame{border-radius:13px}.stat{padding:7px}.board{gap:6px;margin-bottom:8px}.controls{gap:8px;margin-top:8px}.control{min-height:62px;font-size:17px}.heading{margin-bottom:8px}.panel{padding:14px}.panel p{margin-bottom:10px}}
 </style>
 </head>
@@ -73,7 +74,7 @@ kbd{font:inherit;color:#dfe5f7;background:#293650;border-radius:5px;padding:2px 
 'use strict';
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
-const W=960, H=420, GROUND=335, PX=142;
+const W=window.innerWidth<580?620:960, H=420, GROUND=335, PX=142;\ncanvas.width=W;canvas.height=H;
 const ui={score:document.getElementById('score'),best:document.getElementById('best'),speed:document.getElementById('speed'),
 overlay:document.getElementById('overlay'),icon:document.getElementById('modalIcon'),title:document.getElementById('modalTitle'),
 desc:document.getElementById('modalDescription'),start:document.getElementById('start')};
