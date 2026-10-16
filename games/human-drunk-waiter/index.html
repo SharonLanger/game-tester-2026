@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101726">
+  <meta name="game-title" content="המלצר בפאניקה">
+  <meta name="game-icon" content="😵‍💫">
+  <meta name="description" content="גרסה מותאמת אישית של המלצר השיכור — מאזנים מגש עמוס בכוסות, עם פרצוף אמיתי שמגיב לכל טעות.">
+  <title>המלצר בפאניקה</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f6f7ff;background:#101726;color-scheme:dark}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;overscroll-behavior:none}
+    body{background:radial-gradient(circle at 50% 0,#384e69,#101726 65%);padding:10px;display:flex;justify-content:center}
+    main{width:min(100%,670px);margin:auto}
+    header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+    h1{margin:0;font-size:clamp(22px,5vw,32px)}
+    .tag{font-size:12px;border-radius:99px;background:#2b405c;border:1px solid #6683a5;color:#ccdef3;padding:6px 10px}
+    .stats{display:flex;gap:8px;margin:0 0 10px}
+    .stat{flex:1;border-radius:13px;border:1px solid #4e6580;background:#23314b;text-align:center;padding:9px 3px}
+    .stat b{display:block;font-size:clamp(21px,5vw,29px);font-variant-numeric:tabular-nums}
+    .stat small{font-size:12px;color:#c5d0e0}
+    .stage{position:relative;background:#efdbb8;overflow:hidden;border-radius:17px;border:2px solid #6889a8}
+    canvas{width:100%;height:auto;display:block;touch-action:none}
+    .overlay{position:absolute;inset:0;background:#0c1b2ecf;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:14px}
+    .overlay[hidden]{display:none}
+    .modal{border:1px solid #7595ad;border-radius:20px;padding:20px 15px;background:#263751f0;text-align:center;max-width:440px;width:100%}
+    .emoji{font-size:48px}.modal h2{font-size:clamp(24px,6vw,32px);margin:8px 0}.modal p{line-height:1.6;color:#d2e3f4;font-size:15px}
+    button{font:inherit;cursor:pointer;touch-action:none}
+    .primary{border:0;background:#ffdaa2;border-radius:13px;padding:13px 26px;color:#3f2c18;font-weight:900;font-size:17px;touch-action:manipulation}
+    .controls{display:flex;gap:12px;margin-top:12px}.controls button{flex:1;height:65px;background:#30496b;color:white;border:1px solid #7390b8;border-radius:15px;font-size:19px;font-weight:800}.controls button:active{background:#506c92}
+    .hint{color:#c1cce0;font-size:13px;line-height:1.65;text-align:center;margin:10px 0 0}
+    @media(max-width:600px){.overlay{position:fixed;inset:0;z-index:5;overflow-y:auto}.modal{margin:auto}.controls{gap:7px}.controls button{height:55px}}
+  </style>
+</head>
+<body>
+<main>
+  <header><h1>😵‍💫 המלצר בפאניקה</h1><span class="tag">גרסת בדיקה אישית 1.0</span></header>
+  <div class="stats">
+    <div class="stat"><b id="score">0</b><small>ניקוד</small></div>
+    <div class="stat"><b id="cups">2</b><small>כוסות על המגש</small></div>
+    <div class="stat"><b id="best">0</b><small>שיא אישי</small></div>
+  </div>
+  <div class="stage">
+    <canvas id="canvas" width="440" height="540"></canvas>
+    <div id="overlay" class="overlay">
+      <div class="modal">
+        <div class="emoji" id="icon">🍷</div>
+        <h2 id="title">עכשיו זה אישי</h2>
+        <p id="desc">שמרו על המגש מאוזן. ככל שהמצב נעשה מסוכן יותר, הפרצוף על הדמות משתנה — רגוע, מודאג, מופתע ואז בפאניקה.</p>
+        <button id="start" class="primary">יאללה, לא להפיל!</button>
+      </div>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="left">◀ הטיה שמאלה</button>
+    <button id="right">הטיה ימינה ▶</button>
+  </div>
+  <p class="hint">לחיצה ארוכה מטה את המגש. השתמשו בכפתורים, בחיצים במקלדת או בנגיעה בצד ימין/שמאל של אזור המשחק. ככל שהנטייה קיצונית יותר — הפנים יגיבו.</p>
+</main>
+<script>
+(() => {
+'use strict';
+const c=document.getElementById('canvas'),g=c.getContext('2d'),E=id=>document.getElementById(id),W=440,H=540;
+const KEY='tester-human-drunk-waiter-best-v1';
+let best=0; try{best=Number(localStorage.getItem(KEY))||0}catch(e){}
+E('best').textContent=best;
+
+const faces={
+  calm:new Image(),
+  worried:new Image(),
+  surprised:new Image(),
+  panicked:new Image()
+};
+faces.calm.src='assets/calm.webp';
+faces.worried.src='assets/worried.webp';
+faces.surprised.src='assets/surprised.webp';
+faces.panicked.src='assets/panicked.webp';
+
+let mode='ready',elapsed=0,score=0,cups=2,angle=.035,angularVel=0,slide=0,slideV=0,left=false,right=false,nextCup=8,flash=0,last=0;
+
+function modal(icon,title,desc,label){E('icon').textContent=icon;E('title').textContent=title;E('desc').textContent=desc;E('start').textContent=label;E('overlay').hidden=false}
+function begin(){mode='play';elapsed=0;score=0;cups=2;angle=.035;angularVel=0;slide=0;slideV=0;nextCup=8;flash=0;left=false;right=false;E('cups').textContent=2;E('score').textContent=0;E('overlay').hidden=true}
+function finish(){mode='over';left=right=false;if(score>best){best=score;E('best').textContent=best;try{localStorage.setItem(KEY,String(best))}catch(e){}}
+  modal('💥','הכוסות נפלו!','שרדתם '+Math.floor(elapsed)+' שניות וצברתם '+score+' נקודות עם '+cups+' כוסות.','לנסות שוב')}
+function update(dt){
+  elapsed+=dt;
+  if(elapsed>=nextCup){cups=Math.min(8,cups+1);E('cups').textContent=cups;nextCup+=8;flash=1.5}
+  const wind=(.20+cups*.10)*Math.sin(elapsed*1.5)+(.1+cups*.032)*Math.sin(elapsed*3.1);
+  const input=(right?1:0)-(left?1:0);
+  const accel=3.1*Math.sin(angle)+wind+input*5.8-angularVel*2.4;
+  angularVel+=accel*dt;angle+=angularVel*dt;
+  slideV+=(Math.sin(angle)*55+angularVel*8-slideV*.7)*dt;slide+=slideV*dt;
+  flash=Math.max(0,flash-dt);
+  score=Math.floor(elapsed*12)+(cups-2)*80;
+  E('score').textContent=score;
+  if(Math.abs(angle)>.67||Math.abs(slide)>117)finish();
+}
+function currentFace(){
+  const danger=Math.max(Math.abs(angle)/0.67,Math.abs(slide)/117);
+  if(danger<0.28) return faces.calm;
+  if(danger<0.55) return faces.worried;
+  if(danger<0.8) return faces.surprised;
+  return faces.panicked;
+}
+function drawFace(img,x,y,w,h){
+  if(!img.complete) return;
+  g.save();
+  g.translate(x,y);
+  g.drawImage(img,-w/2,-h/2,w,h);
+  g.restore();
+}
+function drawRoundedRect(x,y,w,h,r,color){
+  g.fillStyle=color; g.beginPath(); g.roundRect(x,y,w,h,r); g.fill();
+}
+function render(){
+  const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#ead59e');sky.addColorStop(1,'#f1e1c4');g.fillStyle=sky;g.fillRect(0,0,W,H);
+  g.fillStyle='#d3b68d';for(let i=0;i<8;i++){g.fillRect(i*65-15,85,24,218)}
+  g.fillStyle='#976f58';g.fillRect(0,450,W,90);g.fillStyle='#704d45';g.fillRect(0,450,W,13);
+  for(let i=0;i<5;i++){g.fillStyle='#c7a371';g.fillRect(i*112+15,125,47,70);g.fillStyle='#ffffff99';g.fillRect(i*112+25,134,12,25)}
+
+  // body
+  drawRoundedRect(162,375,118,123,42,'#2a4a60');
+  g.fillStyle='#ffffff';g.fillRect(210,375,18,123);
+  g.fillStyle='#8d1e2f';g.beginPath();g.moveTo(219,393);g.lineTo(205,431);g.lineTo(233,431);g.closePath();g.fill();
+  g.fillStyle='#d6a57c';g.beginPath();g.arc(220,340,32,0,7);g.fill();
+  g.fillStyle='#1d3040';g.beginPath();g.arc(220,326,32,Math.PI,Math.PI*2);g.fill();
+  // face overlay
+  drawFace(currentFace(),220,355,138,138);
+
+  // arm
+  g.strokeStyle='#d6a57c';g.lineWidth=15;g.lineCap='round';g.beginPath();g.moveTo(178,417);g.lineTo(145,410);g.lineTo(169,382);g.stroke();
+
+  const cx=220,cy=284;
+  g.save();g.translate(cx,cy);g.rotate(angle);
+  g.fillStyle='#677990';g.beginPath();g.roundRect(-148,0,296,20,9);g.fill();
+  g.fillStyle='#afbed0';g.beginPath();g.roundRect(-148,-8,296,12,8);g.fill();
+  g.fillStyle='#dce1e6';g.fillRect(-144,-8,288,4);
+  const cupPos=[-100,-52,0,52,100,-79,79,20];const emojis=['🍷','🍺','🥂','🍹','🥤','🍸','🧃','🍷'];
+  g.textAlign='center';g.textBaseline='middle';g.font='46px system-ui';
+  for(let i=0;i<cups;i++){let x=cupPos[i]+slide;if(x<-147||x>147)continue;g.fillText(emojis[i],x,-33)}
+  g.restore();
+
+  // meter
+  drawRoundedRect(60,30,320,49,12,'#223a53ca');
+  g.fillStyle='#d6e3ef';g.font='bold 16px system-ui';g.textAlign='center';g.fillText('מד נטייה',220,47);
+  g.fillStyle='#91c9b2';g.fillRect(105,60,230,8);
+  g.fillStyle='#f7a4a4';g.fillRect(105,60,45,8);g.fillRect(290,60,45,8);
+  const pointer=220+Math.max(-115,Math.min(115,angle/.67*115));
+  g.fillStyle='#27374a';g.beginPath();g.moveTo(pointer,52);g.lineTo(pointer-8,76);g.lineTo(pointer+8,76);g.closePath();g.fill();
+
+  if(flash>0){drawRoundedRect(100,97,240,44,12,'#334861c5');g.fillStyle='#fff';g.font='bold 19px system-ui';g.textAlign='center';g.fillText('עוד כוס! 🍹',220,125)}
+
+  const danger=Math.max(Math.abs(angle)/0.67,Math.abs(slide)/117);
+  const faceLabel=danger<0.28?'רגוע':danger<0.55?'מודאג':danger<0.8?'מופתע':'בפאניקה';
+  g.fillStyle='#1f3147cc';g.beginPath();g.roundRect(12,12,106,30,9);g.fill();
+  g.fillStyle='#fff';g.font='bold 15px system-ui';g.textAlign='center';g.fillText('מצב: '+faceLabel,65,32);
+}
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(mode==='play')update(dt);render();requestAnimationFrame(loop)}
+function hold(id,dir){const e=E(id);e.addEventListener('pointerdown',ev=>{ev.preventDefault();if(mode==='play'){if(dir==='left')left=true;else right=true;e.setPointerCapture?.(ev.pointerId)}});['pointerup','pointercancel','lostpointercapture'].forEach(event=>e.addEventListener(event,()=>{if(dir==='left')left=false;else right=false}))}
+hold('left','left');hold('right','right');
+let side=null;
+c.addEventListener('pointerdown',e=>{if(mode!=='play')return;const r=c.getBoundingClientRect();side=(e.clientX-r.left<r.width/2)?'left':'right';if(side==='left')left=true;else right=true;c.setPointerCapture?.(e.pointerId)});
+['pointerup','pointercancel','lostpointercapture'].forEach(type=>c.addEventListener(type,()=>{if(side==='left')left=false;if(side==='right')right=false;side=null}));
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft')left=true;if(e.code==='ArrowRight')right=true;if(e.code==='Space'&&mode!=='play'&&!e.repeat)begin()});
+addEventListener('keyup',e=>{if(e.code==='ArrowLeft')left=false;if(e.code==='ArrowRight')right=false});
+addEventListener('blur',()=>{left=right=false});
+E('start').onclick=begin;requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
