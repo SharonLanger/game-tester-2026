@@ -65,14 +65,14 @@ setting=level;
 function eq(a,b){return a&&b&&a.x===b.x&&a.y===b.y;}
 function sound(freq,dur){try{if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==="suspended")audio.resume();var o=audio.createOscillator(),v=audio.createGain(),t=audio.currentTime;o.type="square";o.frequency.value=freq;v.gain.setValueAtTime(.02,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(v);v.connect(audio.destination);o.start(t);o.stop(t+dur+.005);}catch(e){}}
 function vacant(){var spaces=[];for(var y=0;y<H;y++)for(var x=0;x<W;x++){var p={x:x,y:y};if(!snake.some(function(s){return eq(p,s)}))spaces.push(p);}return spaces.length?spaces[Math.floor(Math.random()*spaces.length)]:null;}
-function start(){snake=[];for(var i=0;i<8;i++)snake.push({x:11-i,y:5});food=vacant();direction={x:1,y:0};pending={x:1,y:0};locked=false;points=0;accum=0;prev=0;mode="game";sound(860,.05);}
+function start(){snake=[];for(var i=0;i<8;i++)snake.push({x:8-i,y:9});food=vacant();direction={x:1,y:0};pending={x:1,y:0};locked=false;points=0;accum=0;prev=0;mode="game";sound(860,.05);}
 function finish(won){if(won)points+=100;if(points>best){best=points;try{localStorage.setItem(HS_KEY,String(best));}catch(e){}}mode=won?"won":"dead";sound(won?990:250,.2);}
 function tick(){direction=pending;locked=false;var head={x:snake[0].x+direction.x,y:snake[0].y+direction.y},eating=eq(head,food),body=eating?snake:snake.slice(0,-1);
 if(head.x<0||head.x>=W||head.y<0||head.y>=H||body.some(function(s){return eq(s,head)})){finish(false);return;}
 snake.unshift(head);if(eating){points+=level;sound(1046,.05);if(snake.length===W*H){food=null;finish(true);}else food=vacant();}else snake.pop();}
 function steer(x,y){if(mode!=="game"||locked||x===-direction.x&&y===-direction.y||x===direction.x&&y===direction.y)return;pending={x:x,y:y};locked=true;}
 function diagonal(k){var map={"1":[[0,-1],[-1,0]],"3":[[0,-1],[1,0]],"7":[[0,1],[-1,0]],"9":[[0,1],[1,0]]},opts=map[k];if(!opts)return;var d=locked?pending:direction;for(var i=0;i<2;i++){var p=opts[i];if(p[0]*d.x+p[1]*d.y===0){steer(p[0],p[1]);return;}}}
-function menuItems(){return mode==="paused"?["Continue","New game","Level "+level,"Top score","Instructions"]:["New game","Level "+level,"Top score","Instructions"];}
+function menuItems(){return mode==="paused"?["Continue","New game","Level "+level,"Top score"]:["New game","Level "+level,"Top score","Instructions"];}
 function select(){var item=menuItems()[selected];if(item==="Continue"){mode="game";prev=0;}else if(item==="New game")start();else if(item&&item.indexOf("Level ")===0){setting=level;mode="level";}
 else if(item==="Top score")mode="high";else if(item==="Instructions")mode="help";}
 function press(k){
