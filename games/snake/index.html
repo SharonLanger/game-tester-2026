@@ -1,65 +1,112 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0e1a28"><meta name="game-title" content="נחש הבקבוקים"><meta name="game-icon" content="🐍"><meta name="description" content="נחש קלאסי שאוסף בקבוקים, גדל, מאיץ ומתחמק ממכשולים."><title>נחש הבקבוקים</title>
+<!doctype html>
+<html lang="he" dir="ltr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121217"><meta name="game-title" content="סנייק נוקיה 5110">
+<meta name="game-icon" content="📱"><meta name="description" content="Snake I ברוח הנוקיה 5110: טלפון רטרו שלם שמפעילים רק דרך המקשים.">
+<title>Nokia 5110 — Snake</title>
 <style>
-:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#f5f8ff;background:#0b1928;color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;min-height:100%;overscroll-behavior:none}
-body{background:radial-gradient(circle at 50% 0,#284b4c,#0b1928 65%);padding:10px;display:flex;justify-content:center}
-main{width:min(100%,530px);margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}h1{font-size:clamp(22px,5vw,32px);margin:0}.tag{border-radius:99px;background:#225347;color:#ccf7d3;padding:6px 11px;font-size:12px}
-.stats{display:flex;gap:8px;margin:0 0 10px}.stat{flex:1;text-align:center;background:#19333b;border:1px solid #456c71;border-radius:12px;padding:9px 4px}.stat b{display:block;font-size:25px;font-variant-numeric:tabular-nums}.stat small{font-size:12px;color:#b5cec8}
-.stage{border:2px solid #57847a;border-radius:15px;position:relative;overflow:hidden;background:#152e33}canvas{display:block;width:100%;height:auto;touch-action:none}
-.overlay{position:absolute;inset:0;background:#0b1a28d9;display:flex;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}.overlay[hidden]{display:none}
-.modal{text-align:center;border-radius:16px;background:#18323fe8;border:1px solid #618c8c;max-width:390px;width:100%;padding:22px 14px}.emoji{font-size:45px}.modal h2{font-size:clamp(23px,5vw,31px);margin:5px 0}.modal p{line-height:1.6;font-size:15px;color:#d0e6e9}
-button{font:inherit;cursor:pointer;touch-action:manipulation}.primary{border:0;background:#a9eeb2;color:#183724;padding:13px 25px;font-weight:900;border-radius:12px}
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:330px;margin:14px auto}
-.pad button{height:55px;border:1px solid #769fa0;background:#264e5b;color:white;border-radius:12px;font-size:23px;touch-action:none}
-.pad button:active{background:#437a7a}.pad .up{grid-column:2}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
-.hint{text-align:center;color:#bed1d8;font-size:12px;line-height:1.55;margin:0}
-@media(max-width:600px){.overlay{position:fixed;inset:0;z-index:3;overflow-y:auto}.modal{margin:auto}.pad button{height:47px}}
-</style></head><body><main>
-<header><h1>🐍 נחש הבקבוקים</h1><span class="tag">גרסת בדיקה 1.0</span></header>
-<div class="stats"><div class="stat"><b id="score">0</b><small>נקודות</small></div><div class="stat"><b id="level">1</b><small>מהירות</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
-<div class="stage"><canvas id="canvas" width="440" height="440"></canvas><div id="overlay" class="overlay"><div class="modal"><div class="emoji" id="icon">🐍</div><h2 id="title">כמה תוכל לגדול?</h2><p id="desc">אספו את הבקבוקים הירוקים, בלי להיתקע בקיר או בעצמכם. בהמשך יופיעו מכשולים והנחש ינוע מהר יותר.</p><button id="start" class="primary">התחל משחק</button></div></div></div>
-<div class="pad"><button class="up" id="up" aria-label="למעלה">▲</button><button class="left" id="left" aria-label="שמאלה">◀</button><button class="down" id="down" aria-label="למטה">▼</button><button class="right" id="right" aria-label="ימינה">▶</button></div>
-<p class="hint">השתמשו בחצים, בכפתורים או בהחלקת אצבע על לוח המשחק.</p>
+:root{font-family:Arial,sans-serif;background:#16161a;color-scheme:dark;color:#eee}*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{min-height:100dvh;display:flex;justify-content:center;align-items:center;background:radial-gradient(ellipse at center,#46464d,#131317 66%);padding:4px}
+.phone{position:relative;width:min(96vw,420px,calc(99dvh*.515));aspect-ratio:.515;border:3px solid #09090c;border-radius:17% 17% 20% 20%/9% 9% 13% 13%;background:radial-gradient(ellipse at 16% 33%,#68646f55,transparent 22%),linear-gradient(98deg,#0c0e12,#2f2e34 10%,#1c1d22 30%,#313137 58%,#111116);box-shadow:inset 5px 0 9px #9992,inset -8px 0 14px #000b,0 18px 36px #0009}
+.speaker{position:absolute;top:3%;left:40%;width:20%;height:1.8%;border-radius:15px;background:repeating-linear-gradient(90deg,#08080a 0 3px,#5c5960 3px 5px);box-shadow:0 1px 2px #7774}
+.brand{position:absolute;top:6%;width:100%;text-align:center;color:#dedce1;font-size:clamp(16px,5vw,26px);font-weight:900;letter-spacing:.14em;text-shadow:0 1px 2px #000}
+.screen-frame{position:absolute;left:5%;top:11.3%;width:90%;height:32.8%;padding:4.5% 3.8% 5%;border-radius:16% 16% 11% 11%/13% 13% 8% 8%;border:3px solid #050608;background:linear-gradient(135deg,#020305,#1d1c1f 22%,#06070a 58%,#29282b);box-shadow:0 2px 2px #b2aea53a,inset 1px 2px 4px #000,inset -2px -2px 4px #8882}
+.lcd{width:100%;height:100%;background:#c5be2a;position:relative;overflow:hidden;border:2px solid #413d18;border-radius:3%;box-shadow:inset 0 0 5px #736923,0 0 8px #a99c255c}
+.lcd:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#4b451209 0 1px,transparent 1px 3px);pointer-events:none}
+#lcd{width:100%;height:100%;display:block;image-rendering:pixelated;pointer-events:none}
+.key{user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4%;color:#29262a;font-family:Arial,sans-serif;border:2px solid #a08025;background:linear-gradient(160deg,#f1e1c0,#d7c09c 64%,#bd9e76);box-shadow:0 3px 0 #8f6d20,0 5px 2px #0009,inset 0 2px 2px #fff8df,inset 0 -2px 3px #745d3b}
+.key:active,.key.down{transform:translateY(3px);background:linear-gradient(#cdb68f,#eee0bd);box-shadow:inset 0 2px 4px #7c643e,0 2px 2px #0009}
+.key:focus-visible{outline:3px solid #e2c84d;outline-offset:2px}
+.functions{position:absolute;left:5%;right:5%;top:46%;height:14.5%;display:grid;grid-template-columns:1fr 1.3fr .9fr;align-items:center;gap:5%}
+.functions>.key{width:100%;height:65%;font-size:clamp(19px,6vw,30px)}
+.key-c{border-radius:34% 48% 42% 52%/47% 60% 44% 57%;font-weight:bold}
+.key-ok{height:85%!important;border-radius:24% 24% 28% 28%/18% 18% 28% 28%;font-size:clamp(26px,8vw,42px)!important;color:#5697b1}
+.scroll{height:100%;display:flex;flex-direction:column;gap:12%}
+.scroll .key{width:100%;height:44%;border-radius:38% 30% 44% 35%;font-size:clamp(17px,6vw,30px)}
+.scroll .key:last-child{margin-left:-12%}
+.pad{position:absolute;left:5%;right:5%;top:62%;height:31%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:5.5% 8%}
+.pad .key{width:100%;height:100%;border-radius:50%/46%;white-space:nowrap;min-width:0}
+.num{font-weight:900;font-size:clamp(21px,6.5vw,34px);font-style:italic}
+.letters{font-size:clamp(8px,2.8vw,15px);font-weight:700;font-style:italic}
+.mark{position:absolute;bottom:2.4%;left:0;width:100%;text-align:center;letter-spacing:.18em;color:#8d8b9377;font-size:clamp(8px,2.5vw,11px)}
+@media(max-height:480px) and (orientation:landscape){body{min-height:660px}.phone{width:min(340px,90vw)}}
+</style></head><body>
+<main class="phone" aria-label="Nokia 5110 Snake">
+<div class="speaker" aria-hidden="true"></div><div class="brand" aria-hidden="true">NOKIA</div>
+<div class="screen-frame"><div class="lcd"><canvas id="lcd" width="252" height="144" aria-label="Snake screen. Touch only phone buttons to control the game."></canvas></div></div>
+<div class="functions">
+<button type="button" class="key key-c" data-key="menu" aria-label="Cancel or pause">C</button>
+<button type="button" class="key key-ok" data-key="ok" aria-label="Select or pause">▰</button>
+<div class="scroll"><button type="button" class="key" data-key="up" aria-label="Up">⌃</button><button type="button" class="key" data-key="down" aria-label="Down">⌄</button></div>
+</div>
+<div class="pad" aria-label="Phone numeric keypad">
+<button type="button" class="key" data-key="1" aria-label="1"><span class="num">1</span><span class="letters">◌◌</span></button>
+<button type="button" class="key" data-key="2" aria-label="2 up"><span class="num">2</span><span class="letters">abc</span></button>
+<button type="button" class="key" data-key="3" aria-label="3"><span class="num">3</span><span class="letters">def</span></button>
+<button type="button" class="key" data-key="4" aria-label="4 left"><span class="num">4</span><span class="letters">ghi</span></button>
+<button type="button" class="key" data-key="5" aria-label="5"><span class="num">5</span><span class="letters">jkl</span></button>
+<button type="button" class="key" data-key="6" aria-label="6 right"><span class="num">6</span><span class="letters">mno</span></button>
+<button type="button" class="key" data-key="7" aria-label="7"><span class="num">7</span><span class="letters">pqrs</span></button>
+<button type="button" class="key" data-key="8" aria-label="8 down"><span class="num">8</span><span class="letters">tuv</span></button>
+<button type="button" class="key" data-key="9" aria-label="9"><span class="num">9</span><span class="letters">wxyz</span></button>
+<button type="button" class="key" data-key="*" aria-label="Star"><span class="num">*</span><span class="letters">+</span></button>
+<button type="button" class="key" data-key="0" aria-label="Zero"><span class="num">0</span></button>
+<button type="button" class="key" data-key="#" aria-label="Hash"><span class="num">#</span></button>
+</div><div class="mark">SNAKE · 1998</div>
 </main><script>
-(()=>{'use strict';
-const c=document.getElementById('canvas'),ctx=c.getContext('2d'),E=id=>document.getElementById(id),N=20,S=22;
-const ui={score:E('score'),level:E('level'),best:E('best'),overlay:E('overlay'),icon:E('icon'),title:E('title'),desc:E('desc')};
-const KEY='tester-snake-best-v1';let best=0;try{best=Number(localStorage.getItem(KEY))||0}catch(e){}ui.best.textContent=best;
-let mode='ready',snake=[],food=null,blocks=[],direction={x:1,y:0},queued={x:1,y:0},score=0,ticks=0,accum=0,last=0,turnLocked=false,swipe=null;
-const eq=(a,b)=>a.x===b.x&&a.y===b.y;
-function show(icon,title,desc,label){ui.icon.textContent=icon;ui.title.textContent=title;ui.desc.textContent=desc;E('start').textContent=label;ui.overlay.hidden=false}
-function emptySpot(excludeHead=false){let spaces=[];for(let x=0;x<N;x++)for(let y=0;y<N;y++){const pos={x,y};
- if(snake.some(a=>eq(a,pos))||blocks.some(a=>eq(a,pos))||food&&eq(food,pos)||excludeHead&&Math.abs(x-snake[0].x)+Math.abs(y-snake[0].y)<6)continue;spaces.push(pos)}
- return spaces.length?spaces[Math.floor(Math.random()*spaces.length)]:null}
-function begin(){snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];direction={x:1,y:0};queued={x:1,y:0};
- blocks=[];food=null;score=0;ticks=0;accum=0;turnLocked=false;mode='play';ui.overlay.hidden=true;ui.score.textContent=0;ui.level.textContent=1;food=emptySpot()}
-function finish(){mode='over';if(score>best){best=score;ui.best.textContent=best;try{localStorage.setItem(KEY,String(best))}catch(e){}}
- show('💥','הנחש התרסק!','אספת '+score/10+' בקבוקים וצברת '+score+' נקודות.','שחק שוב')}
-function turn(x,y){if(mode!=='play')return;if(turnLocked)return;if(x===-direction.x&&y===-direction.y)return;queued={x,y};turnLocked=true}
-function step(){
- direction=queued;turnLocked=false;const head={x:snake[0].x+direction.x,y:snake[0].y+direction.y};
- const eating=food&&eq(head,food);const body=eating?snake:snake.slice(0,-1);
- if(head.x<0||head.x>=N||head.y<0||head.y>=N||body.some(s=>eq(s,head))||blocks.some(s=>eq(s,head))){finish();return}
- snake.unshift(head);if(!eating)snake.pop();
- else{score+=10;ui.score.textContent=score;ui.level.textContent=1+Math.floor(score/40);food=null;
- if(score%40===0){const b=emptySpot(true);if(b)blocks.push(b)}
- food=emptySpot();if(!food){show('🏆','מילאת את הלוח!','ניצחת עם '+score+' נקודות!','שחק שוב');mode='over'}}
-}
-function roundRect(x,y,w,h,color,r=5){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
-function render(){
- ctx.fillStyle='#102d30';ctx.fillRect(0,0,440,440);
- for(let x=0;x<N;x++)for(let y=0;y<N;y++){ctx.fillStyle=(x+y)%2?'#1d4442':'#1a3e3d';ctx.fillRect(x*S,y*S,S,S)}
- for(const b of blocks){roundRect(b.x*S+2,b.y*S+2,S-4,S-4,'#bf7754',3);ctx.strokeStyle='#513f35';ctx.lineWidth=2;ctx.strokeRect(b.x*S+5,b.y*S+5,S-10,S-10)}
- if(food){ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='20px system-ui';ctx.fillText('🍾',food.x*S+S/2,food.y*S+S/2)}
- snake.forEach((part,i)=>{roundRect(part.x*S+1,part.y*S+1,S-2,S-2,i?'#42c888':'#a7ec78',i?5:7);
- if(!i){ctx.fillStyle='#16372d';ctx.beginPath();ctx.arc((part.x+.33)*S,(part.y+.34)*S,2.4,0,7);ctx.arc((part.x+.72)*S,(part.y+.34)*S,2.4,0,7);ctx.fill()}})
-}
-function loop(t){const dt=Math.min(60,t-last||0);last=t;if(mode==='play'){accum+=dt;const ms=Math.max(66,180-score*1.45);while(accum>=ms&&mode==='play'){accum-=ms;step()}}render();requestAnimationFrame(loop)}
-E('start').onclick=begin;
-const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]};
-addEventListener('keydown',e=>{if(dir[e.code]){e.preventDefault();turn(...dir[e.code])}if(e.code==='Space'&&mode!=='play'){e.preventDefault();begin()}});
-for(const [id,x,y] of [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]])E(id).addEventListener('pointerdown',e=>{e.preventDefault();turn(x,y)});
-c.addEventListener('pointerdown',e=>{swipe={x:e.clientX,y:e.clientY}});
-c.addEventListener('pointerup',e=>{if(!swipe)return;const dx=e.clientX-swipe.x,dy=e.clientY-swipe.y;swipe=null;if(Math.max(Math.abs(dx),Math.abs(dy))<15)return;if(Math.abs(dx)>Math.abs(dy))turn(Math.sign(dx),0);else turn(0,Math.sign(dy))});
-requestAnimationFrame(loop);
+(function(){
+"use strict";
+var W=20,H=11,S=10,X=26,Y=17;
+var BG="#c5bd2e",INK="#35351b",HS_KEY="tester-snake-5110-best-v1",LEVEL_KEY="tester-snake-5110-level-v1";
+var el=document.getElementById("lcd"),g=el.getContext("2d"),mode="menu",level=4,setting=4,best=0,selected=0;
+var snake=[],food=null,direction={x:1,y:0},pending={x:1,y:0},locked=false,points=0,accum=0,prev=0,audio=null;
+try{best=Number(localStorage.getItem(HS_KEY))||0;level=Math.max(1,Math.min(9,Number(localStorage.getItem(LEVEL_KEY))||4));}catch(e){}
+setting=level;
+function eq(a,b){return a&&b&&a.x===b.x&&a.y===b.y;}
+function sound(freq,dur){try{if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==="suspended")audio.resume();var o=audio.createOscillator(),v=audio.createGain(),t=audio.currentTime;o.type="square";o.frequency.value=freq;v.gain.setValueAtTime(.02,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(v);v.connect(audio.destination);o.start(t);o.stop(t+dur+.005);}catch(e){}}
+function vacant(){var spaces=[];for(var y=0;y<H;y++)for(var x=0;x<W;x++){var p={x:x,y:y};if(!snake.some(function(s){return eq(p,s)}))spaces.push(p);}return spaces.length?spaces[Math.floor(Math.random()*spaces.length)]:null;}
+function start(){snake=[];for(var i=0;i<8;i++)snake.push({x:11-i,y:5});food=vacant();direction={x:1,y:0};pending={x:1,y:0};locked=false;points=0;accum=0;prev=0;mode="game";sound(860,.05);}
+function finish(won){if(won)points+=100;if(points>best){best=points;try{localStorage.setItem(HS_KEY,String(best));}catch(e){}}mode=won?"won":"dead";sound(won?990:250,.2);}
+function tick(){direction=pending;locked=false;var head={x:snake[0].x+direction.x,y:snake[0].y+direction.y},eating=eq(head,food),body=eating?snake:snake.slice(0,-1);
+if(head.x<0||head.x>=W||head.y<0||head.y>=H||body.some(function(s){return eq(s,head)})){finish(false);return;}
+snake.unshift(head);if(eating){points+=level;sound(1046,.05);if(snake.length===W*H){food=null;finish(true);}else food=vacant();}else snake.pop();}
+function steer(x,y){if(mode!=="game"||locked||x===-direction.x&&y===-direction.y||x===direction.x&&y===direction.y)return;pending={x:x,y:y};locked=true;}
+function diagonal(k){var map={"1":[[0,-1],[-1,0]],"3":[[0,-1],[1,0]],"7":[[0,1],[-1,0]],"9":[[0,1],[1,0]]},opts=map[k];if(!opts)return;var d=locked?pending:direction;for(var i=0;i<2;i++){var p=opts[i];if(p[0]*d.x+p[1]*d.y===0){steer(p[0],p[1]);return;}}}
+function menuItems(){return mode==="paused"?["Continue","New game","Level "+level,"Top score","Instructions"]:["New game","Level "+level,"Top score","Instructions"];}
+function select(){var item=menuItems()[selected];if(item==="Continue"){mode="game";prev=0;}else if(item==="New game")start();else if(item&&item.indexOf("Level ")===0){setting=level;mode="level";}
+else if(item==="Top score")mode="high";else if(item==="Instructions")mode="help";}
+function press(k){
+if(mode==="game"){if(k==="2"||k==="up")steer(0,-1);else if(k==="4")steer(-1,0);else if(k==="6")steer(1,0);else if(k==="8"||k==="down")steer(0,1);
+else if("1379".indexOf(k)!==-1)diagonal(k);else if(k==="menu"||k==="ok"){mode="paused";selected=0;sound(480,.05);}return;}
+if(mode==="dead"||mode==="won"){if(k==="menu"||k==="ok"){mode="menu";selected=0;sound(700,.04);}return;}
+if(mode==="level"){if(k==="up"||k==="2"||k==="6")setting=Math.min(9,setting+1);else if(k==="down"||k==="8"||k==="4")setting=Math.max(1,setting-1);
+else if(k==="ok"){level=setting;try{localStorage.setItem(LEVEL_KEY,String(level));}catch(e){}mode="menu";selected=1;}else if(k==="menu"){mode="menu";selected=1;}else return;sound(610,.03);return;}
+if(mode==="high"||mode==="help"){if(k==="menu"||k==="ok"){mode="menu";selected=0;sound(600,.03);}return;}
+if(mode==="menu"||mode==="paused"){var n=menuItems().length;if(k==="up"||k==="2"){selected=(selected+n-1)%n;sound(540,.03);}
+else if(k==="down"||k==="8"){selected=(selected+1)%n;sound(540,.03);}else if(k==="ok"){sound(700,.03);select();}else if(k==="menu"&&mode==="paused"){mode="game";prev=0;}}}
+document.querySelectorAll("button[data-key]").forEach(function(b){
+b.addEventListener("click",function(ev){ev.preventDefault();press(b.dataset.key);paint();});
+b.addEventListener("pointerdown",function(){b.classList.add("down");});
+["pointerup","pointerleave","pointercancel"].forEach(function(t){b.addEventListener(t,function(){b.classList.remove("down");});});
+});
+// The LCD is deliberately non-interactive; the device keypad is the only input.
+function clean(){g.fillStyle=BG;g.fillRect(0,0,252,144);g.fillStyle=INK;}
+function txt(s,x,y,size,align){g.fillStyle=INK;g.font="bold "+(size||13)+"px monospace";g.textAlign=align||"left";g.textBaseline="middle";g.fillText(String(s),x,y);}
+function mid(s,y,z){txt(s,126,y,z,"center");}function line(y){g.fillStyle=INK;g.fillRect(8,y,236,1);}
+function footer(a,b){line(125);txt(a,9,135,9);txt(b,243,135,9,"right");}
+function game(){g.fillStyle=INK;for(var x=X-5;x<=X+W*S+3;x+=3){g.fillRect(x,Y-6,2,2);g.fillRect(x,Y+H*S+3,2,2);}
+for(var y=Y-6;y<=Y+H*S+3;y+=3){g.fillRect(X-5,y,2,2);g.fillRect(X+W*S+3,y,2,2);}
+if(food){var fx=X+food.x*S+5,fy=Y+food.y*S+5;g.fillRect(fx-1,fy-4,3,3);g.fillRect(fx-4,fy-1,3,3);g.fillRect(fx+2,fy-1,3,3);g.fillRect(fx-1,fy+2,3,3);}
+snake.forEach(function(s){g.fillRect(X+s.x*S+1,Y+s.y*S+1,9,9);});}
+function menu(){mid("SNAKE",19,17);line(31);menuItems().forEach(function(s,i){var y=46+i*19;if(i===selected){g.fillStyle=INK;g.fillRect(10,y-10,231,18);g.fillStyle=BG;g.fillRect(12,y-8,227,14);g.fillStyle=INK;g.fillRect(16,y-3,5,7);}txt(s,31,y,14);});footer("C: BACK","SELECT");}
+function paint(){clean();if(mode==="game"){game();return;}if(mode==="menu"||mode==="paused"){menu();return;}
+if(mode==="level"){mid("SPEED",24,18);line(42);mid("LEVEL "+setting,68,21);for(var i=0;i<9;i++){g.fillStyle=INK;if(i<setting)g.fillRect(26+i*23,94,17,14);else g.strokeRect(26+i*23,94,17,14);}footer("C: BACK","OK");return;}
+if(mode==="high"){mid("TOP SCORE",26,17);line(45);mid(best,82,26);footer("C: BACK","OK");return;}
+if(mode==="help"){mid("HOW TO PLAY",18,16);line(30);txt("1-9: STEER",14,46,13);txt("(EXCEPT 5)",14,62,13);txt("EAT THE DOTS",14,80,13);txt("AVOID WALLS",14,98,13);txt("SCORE = SPEED",14,116,12);footer("C: BACK","OK");return;}
+if(mode==="dead"||mode==="won"){mid(mode==="won"?"WELL DONE!":"GAME OVER",23,17);line(43);mid("SCORE",62,13);mid(points,88,27);txt("TOP "+best,14,114,12);footer("C: BACK","OK");}}
+function frame(t){if(mode==="game"){if(!prev)prev=t;accum+=Math.min(80,Math.max(0,t-prev));
+var ms=Math.round(270*Math.pow(.82,level-1));while(accum>=ms&&mode==="game"){accum-=ms;tick();}}
+prev=t;paint();requestAnimationFrame(frame);}
+paint();requestAnimationFrame(frame);
 })();
 </script></body></html>
