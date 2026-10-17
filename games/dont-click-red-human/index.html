@@ -27,8 +27,20 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visibl
 .tile{height:clamp(63px,12vw,105px);border:3px solid #ffffff65;border-radius:19px;box-shadow:inset 0 -8px 0 #0003,0 5px 9px #0004;cursor:pointer;transition:transform .12s}
 .tile:active{transform:scale(.94)}
 @media(max-width:600px){.red-stage{min-height:435px;padding:10px}.rule{min-height:78px}.tiles{gap:7px}.tile{height:clamp(57px,14vw,75px)}}
-.tile{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:3px}.tile img{height:100%;max-width:100%;object-fit:contain;pointer-events:none}.tile span{position:absolute;bottom:3px;left:2px;right:2px;background:#102036e8;font-size:clamp(11px,3vw,17px);font-weight:900;border-radius:6px;padding:2px;direction:rtl;pointer-events:none}.primary:disabled{opacity:.6;cursor:wait}</style></head><body><main>
-<header><h1>🔴 אל תלחץ — פרצופים</h1><span class="version">גרסת פרצופים 2.0</span></header>
+.tile{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:3px}.tile img{height:100%;max-width:100%;object-fit:contain;pointer-events:none}.tile span{position:absolute;bottom:3px;left:2px;right:2px;background:#102036e8;font-size:clamp(11px,3vw,17px);font-weight:900;border-radius:6px;padding:2px;direction:rtl;pointer-events:none}.primary:disabled{opacity:.6;cursor:wait}
+body{padding:8px}
+header{margin-bottom:6px}h1{font-size:clamp(18px,4.5vw,28px)}
+.stats{margin-bottom:6px}.stat{padding:5px}.stat b{font-size:22px}
+.red-stage{min-height:0;padding:8px 10px 10px}
+.rule{min-height:52px;font-size:clamp(20px,5vw,30px)}
+.timer{height:9px;margin:4px 0 10px}
+.tiles{gap:8px;max-width:none;flex-shrink:0}
+.tile{height:auto;aspect-ratio:1;min-width:0;padding:0;border-radius:16px}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 3px #0008)}
+.foot{margin:6px 0;font-size:11px}
+@media(max-height:480px){header,.stats{margin-bottom:3px}.stat{padding:2px}.stat b{font-size:17px}.rule{min-height:36px;font-size:18px}.timer{margin-bottom:5px}.version{display:none}}
+</style></head><body><main>
+<header><h1>🔴 אל תלחץ — פרצופים</h1><span class="version">גרסת פרצופים 2.1</span></header>
 <div class="stats"><div class="stat"><b id="score">0</b><small>ניקוד</small></div><div class="stat"><b id="round">0</b><small>שלב</small></div><div class="stat"><b id="best">0</b><small>שיא אישי</small></div></div>
 <div class="stage red-stage"><div id="rule" class="rule">משחק רפלקסים</div><div class="timer"><div id="fill"></div></div><div class="tiles" id="tiles"></div><div id="overlay" class="overlay"><div class="modal"><div id="icon" class="emoji">🔴</div><h2 id="headline">אל תלחץ על האדום!</h2><p id="explain">לחצו לפי הפנים וצבע המשבצת. הכיתוב על המשבצות עלול להטעות — התעלמו ממנו! בהמשך יהיו יותר משבצות, הוראות מתחלפות וערבוב מיקומים. טעות אחת או איחור — ונגמר המשחק.</p><button class="primary" id="start">התחל משחק</button></div></div></div>
-<p class="foot">בחרו כפתור בהתאם להוראה. לא מקבלים נקודות על לחיצה שגויה!</p><p class="foot">לחצו על כפתור לפי ההוראה. על כל טעות או איחור המשחק מסתיים.</p></main><script type="module" src="game.js"></script></body></html>
+<p class="foot">לחצו על כפתור לפי ההוראה. על כל טעות או איחור המשחק מסתיים.</p></main><script type="module" src="game.js"></script></body></html>

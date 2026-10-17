@@ -10,4 +10,4 @@ Reusable character portraits for all games in this repository.
 
 ## Available people
 
-bat-hen, ben, daniel, eden, eliran, itzik, revital, rotem, samuel, shiran, and sophie.
+bat-hen, ben, daniel, eden, eliran, itzik, revital, samuel, and shiran.

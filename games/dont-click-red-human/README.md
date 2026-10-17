@@ -11,8 +11,8 @@ Uses happy portraits for stable identity recognition. Each is tinted in memory w
 
 ## Progression
 
-Original grid: 4 cells through round 5, 6 through 12, 9 through 24, then 12. Avoid rules through 7, then 35% avoid and 65% target. Position shuffling starts at 18 with the original cadence. First mistake or timeout ends the game. Score remains 10 plus floor(remaining seconds × 5).
+Grid: 4 square cells through round 13, then 6 from round 14 onward. Always two columns (two or three rows); no 9 or 12 cells. Portraits render at 320px, preserve proportions, and fill squares sized to the available viewport. Avoid rules through 7, then 35% avoid and 65% target. Position shuffling starts at 18 with the original cadence. First mistake or timeout ends the game. Score remains 10 plus floor(remaining seconds × 5).
 
 Face additions: person rules initially; color and combined rules from 6. Distracting color words from 10, wrong names from 14, combined captions from 20, mismatched text ink from 25. Captions never determine correctness. Both matching and nonmatching tiles always exist. Background color and actual face determine the answer.
 
-Timer starts at 2.65 seconds, drops 0.035 per round through round 12, then 0.075 per round to a 0.62 minimum. Personal best uses a new key because difficulty changed.
+Timer starts at 5.30 seconds, drops 0.035 per round through round 12, then 0.075 per round to a 0.62 minimum. Personal best uses a new key because difficulty changed.

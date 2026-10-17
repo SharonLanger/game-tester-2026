@@ -62,6 +62,18 @@ function render() {
     list.append(button);
   }
 }
+function fitBoard() {
+  if (!tiles.length) return;
+  const height = window.visualViewport?.height || window.innerHeight;
+  const rows = tiles.length / 2;
+  const gap = parseFloat(getComputedStyle(list).gap) || 8;
+  const availableWidth = list.parentElement.clientWidth - 24;
+  const byHeight = (height - list.getBoundingClientRect().top - 48 - (rows - 1) * gap) / rows;
+  const side = Math.max(32, Math.min(240, (availableWidth - gap) / 2, byHeight));
+  list.style.width = (side * 2 + gap) + 'px';
+}
+addEventListener('resize', fitBoard);
+window.visualViewport?.addEventListener('resize', fitBoard);
 function setup() {
   E('round').textContent = round;
   const count = C.grids.find(g => round <= g.through).count;
@@ -92,8 +104,9 @@ function setup() {
     if (round >= d.inkFrom) tile.ink = choose(C.palette.filter(c => c.id !== tile.color)).color;
   }
   tiles = mixed(tiles);
-  list.style.gridTemplateColumns = `repeat(${count === 4 ? 2 : count <= 9 ? 3 : 4},minmax(0,1fr))`;
+  list.style.gridTemplateColumns = 'repeat(2,minmax(0,1fr))';
   render();
+  fitBoard();
   duration = durationFor(round, C.timer);
   const now = performance.now();
   deadline = now + duration * 1000;
@@ -131,11 +144,11 @@ async function load() {
       await img.decode();
       for (const color of C.palette) {
         const canvas = document.createElement('canvas');
-        canvas.width = 160; canvas.height = 160;
+        canvas.width = 320; canvas.height = 320;
         const ctx = canvas.getContext('2d');
-        const scale = Math.min(160 / img.width, 160 / img.height);
-        ctx.drawImage(img, (160 - img.width * scale) / 2, (160 - img.height * scale) / 2, img.width * scale, img.height * scale);
-        const pixels = ctx.getImageData(0, 0, 160, 160);
+        const scale = Math.min(320 / img.width, 320 / img.height);
+        ctx.drawImage(img, (320 - img.width * scale) / 2, (320 - img.height * scale) / 2, img.width * scale, img.height * scale);
+        const pixels = ctx.getImageData(0, 0, 320, 320);
         const rgb = color.color.slice(1).match(/../g).map(v => parseInt(v, 16));
         for (let i = 0; i < pixels.data.length; i += 4) {
           const light = (pixels.data[i] * .2126 + pixels.data[i + 1] * .7152 + pixels.data[i + 2] * .0722) / 255;
